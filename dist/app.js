@@ -23,6 +23,7 @@ const index_routes_1 = __importDefault(require("./routes/index.routes"));
 const usuarios_routes_1 = __importDefault(require("./routes/usuarios.routes"));
 const sedes_routes_1 = __importDefault(require("./routes/sedes.routes"));
 const categorias_routes_1 = __importDefault(require("./routes/categorias.routes"));
+const clientes_routes_1 = __importDefault(require("./routes/clientes.routes"));
 const productos_routes_1 = __importDefault(require("./routes/productos.routes"));
 const impuestos_routes_1 = __importDefault(require("./routes/impuestos.routes"));
 const unidades_routes_1 = __importDefault(require("./routes/unidades.routes"));
@@ -52,6 +53,7 @@ class App {
         this.app.use(this.app.get('server'), index_routes_1.default);
         this.app.use(this.app.get('server') + '/usuario', usuarios_routes_1.default);
         this.app.use(this.app.get('server') + '/categoria', categorias_routes_1.default);
+        this.app.use(this.app.get('server') + '/clientes', clientes_routes_1.default);
         this.app.use(this.app.get('server') + '/productos', productos_routes_1.default);
         this.app.use(this.app.get('server') + '/impuestos', impuestos_routes_1.default);
         this.app.use(this.app.get('server') + '/unidades', unidades_routes_1.default);

@@ -9,6 +9,7 @@ import IndexRoutes from './routes/index.routes'
 import UsuarioRoutes from './routes/usuarios.routes'
 import SedesRoutes from './routes/sedes.routes'
 import CategoriasRoutes from './routes/categorias.routes'
+import ClientesRoutes from './routes/clientes.routes'
 import ProductosRoutes from './routes/productos.routes'
 import ImpuestosRoutes from './routes/impuestos.routes'
 import UnidadesRoutes from './routes/unidades.routes'
@@ -44,6 +45,7 @@ export class App {
         this.app.use(this.app.get('server'), IndexRoutes);
         this.app.use(this.app.get('server') + '/usuario', UsuarioRoutes);
         this.app.use(this.app.get('server') + '/categoria', CategoriasRoutes);
+        this.app.use(this.app.get('server') + '/clientes', ClientesRoutes);
         this.app.use(this.app.get('server') + '/productos', ProductosRoutes);
         this.app.use(this.app.get('server') + '/impuestos', ImpuestosRoutes);
         this.app.use(this.app.get('server') + '/unidades', UnidadesRoutes);
