@@ -8,7 +8,7 @@ export async function getProductos (req: Request, res: Response): Promise<Respon
         const { idcategoria, idempresa } = req.params;
         console.log('idcategoria')
         console.log(idcategoria)
-        const select = "select a.id, a.producto, a.descripcion, b.categoria, c.impuesto, a.costo, a.precio, d.unidad  ";
+        const select = "select a.id, a.producto, a.descripcion, b.categoria, c.impuesto, c.tasa, a.costo, a.precio, d.unidad  ";
         const from = "from t_productos a, t_categorias b, t_impuestos c, t_unidades d ";
         let where = " where a.idcategoria = b.id and b.idempresa = $1 and a.idimpuesto = c.id and a.idunidad = d.id";
         if (Number(idcategoria) > 0) {
