@@ -9,7 +9,7 @@ import { pool } from '../database'
 export async function getLogin (req: Request, res: Response): Promise<Response | void> {
     try {
         const { usuario, clave } = req.body;
-        const sql = "select a.id, a.idrol, a.idempresa, c.empresa, a.nombre, b.rol, a.estatus, a.resetearclave ";
+        const sql = "select a.id, a.idrol, a.idempresa, c.empresa, c.tasa, a.nombre, b.rol, a.estatus, a.resetearclave ";
         const from = " from t_usuarios a ";
         let leftjoin = " left join t_roles b ON a.idrol = b.id  ";
         leftjoin += " left join t_empresas c ON a.idempresa = c.id  ";
