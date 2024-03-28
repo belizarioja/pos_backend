@@ -9,7 +9,7 @@ import { pool } from '../database'
 export async function getLogin (req: Request, res: Response): Promise<Response | void> {
     try {
         const { usuario, clave } = req.body;
-        const sql = "select a.id, a.idrol, a.idempresa, c.empresa, c.tasa, a.nombre, b.rol, a.estatus, a.resetearclave ";
+        const sql = "select a.id, a.idrol, a.idempresa, c.empresa, c.tasabcv, c.urlfacturacion, c.tokenfacturacion, a.nombre, b.rol, a.estatus, a.resetearclave ";
         const from = " from t_usuarios a ";
         let leftjoin = " left join t_roles b ON a.idrol = b.id  ";
         leftjoin += " left join t_empresas c ON a.idempresa = c.id  ";
@@ -50,10 +50,10 @@ export async function getLogin (req: Request, res: Response): Promise<Response |
 }
 export async function getUsuarios (req: Request, res: Response): Promise<Response | void> {
     try {
-        const sql = "select a.id, a.idrol, a.usuario, a.clave, a.idserviciosmasivo, a.nombre, c.razonsocial, b.rol, a.estatus ";
+        const sql = "select a.id, a.idrol, a.usuario, a.clave, a.email, a.idempresa, a.nombre, c.empresa, b.rol, a.estatus ";
         const from = " from t_usuarios a ";
         let leftjoin = " left join t_roles b ON a.idrol = b.id  ";
-        leftjoin += " left join t_serviciosmasivos c ON a.idserviciosmasivo = c.id  ";
+        leftjoin += " left join t_empresas c ON a.idempresa = c.id  ";
         const resp = await pool.query(sql + from + leftjoin);
         const cant = resp.rows.length;
         const data = {
@@ -84,12 +84,11 @@ export async function getRoles (req: Request, res: Response): Promise<Response |
 }
 export async function setUsuarios (req: Request, res: Response): Promise<Response | void> {
     try {
-        const { nombre, usuario, clave, idrol, idserviciosmasivo, estatus } = req.body;
+        const { nombre, usuario, clave, idrol, idempresa, email } = req.body;
 
-        const insert = "insert into t_usuarios (nombre, usuario, clave, idrol, idserviciosmasivo, estatus ) ";
-        const values = " values ($1, $2, $3, $4, $5, $6) ";
-        const resp = await pool.query(insert + values, [nombre, usuario, clave, idrol, idserviciosmasivo, estatus]);
-        const cant = resp.rows.length;
+        const insert = "insert into t_usuarios (nombre, usuario, clave, email, idrol, idempresa, estatus ) ";
+        const values = " values ($1, $2, $3, $4, $5, $6, 1) ";
+        await pool.query(insert + values, [nombre, usuario, clave, email, idrol, idempresa]);
         const data = {
             success: true,
             resp: {
@@ -99,7 +98,32 @@ export async function setUsuarios (req: Request, res: Response): Promise<Respons
         return res.status(200).json(data);        
     }
     catch (e) {
-        return res.status(400).send('Error Ingesando Usuario ' + e);
+        return res.status(400).send('Error Creando Usuario ' + e);
+    }
+}
+export async function updUsuario (req: Request, res: Response): Promise<Response | void> {
+    try {
+        const { nombre, clave, usuario, email } = req.body;
+        const { id } = req.params;       
+
+        let sqlupd = "update t_usuarios set nombre = $1, usuario = $2, clave = $3 ";
+        if(email.length > 0) {
+            sqlupd += ", email = '" + email + "'";
+        }
+        const where = " where id = $4 ";
+        let set = 
+        await pool.query(sqlupd + where, [nombre, usuario, clave, id])
+        const data = {
+            success: true,
+            resp: {
+                message: "Usuario actualizado con éxito"
+            }
+        };
+        return res.status(200).json(data);
+        
+    }
+    catch (e) {
+        return res.status(400).send('Error Actualizando Estatus de Usuarios ' + e);
     }
 }
 export async function updateEstatus (req: Request, res: Response): Promise<Response | void> {
