@@ -545,6 +545,6 @@ export async function anularVenta (req: Request, res: Response): Promise<Respons
         return res.status(202).json(data);
     }
     catch (e) {
-        return res.status(400).send('Error anulando Venta >>>> ' + e);
+        return res.status(400).send('Error anulando Venta >>>>>> ' + e);
     }
 }
