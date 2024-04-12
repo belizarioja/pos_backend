@@ -22,12 +22,14 @@ dotenv_1.default.config();
 const index_routes_1 = __importDefault(require("./routes/index.routes"));
 const usuarios_routes_1 = __importDefault(require("./routes/usuarios.routes"));
 const sedes_routes_1 = __importDefault(require("./routes/sedes.routes"));
+const ventas_routes_1 = __importDefault(require("./routes/ventas.routes"));
 const categorias_routes_1 = __importDefault(require("./routes/categorias.routes"));
 const clientes_routes_1 = __importDefault(require("./routes/clientes.routes"));
 const productos_routes_1 = __importDefault(require("./routes/productos.routes"));
 const impuestos_routes_1 = __importDefault(require("./routes/impuestos.routes"));
 const unidades_routes_1 = __importDefault(require("./routes/unidades.routes"));
 const tipodocumentos_routes_1 = __importDefault(require("./routes/tipodocumentos.routes"));
+const configuracion_routes_1 = __importDefault(require("./routes/configuracion.routes"));
 class App {
     constructor(
     // aqui variables y constantes
@@ -58,7 +60,9 @@ class App {
         this.app.use(this.app.get('server') + '/impuestos', impuestos_routes_1.default);
         this.app.use(this.app.get('server') + '/unidades', unidades_routes_1.default);
         this.app.use(this.app.get('server') + '/sede', sedes_routes_1.default);
+        this.app.use(this.app.get('server') + '/ventas', ventas_routes_1.default);
         this.app.use(this.app.get('server') + '/tipodocumento', tipodocumentos_routes_1.default);
+        this.app.use(this.app.get('server') + '/configuracion', configuracion_routes_1.default);
     }
     listen() {
         return __awaiter(this, void 0, void 0, function* () {
