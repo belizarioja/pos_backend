@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getEmpresas = void 0;
+exports.updateEstatusSede = exports.getEmpresas = void 0;
 const database_1 = require("../database");
 function getEmpresas(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -28,3 +28,24 @@ function getEmpresas(req, res) {
     });
 }
 exports.getEmpresas = getEmpresas;
+function updateEstatusSede(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { estatus } = req.body;
+            const { id } = req.params;
+            const sqlupd = "update t_empresas set estatus = $1 where id = $2 ";
+            yield database_1.pool.query(sqlupd, [estatus, id]);
+            const data = {
+                success: true,
+                resp: {
+                    message: "Estatus de Cliente Emisor actualizado con éxito"
+                }
+            };
+            return res.status(200).json(data);
+        }
+        catch (e) {
+            return res.status(400).send('Error Actualizando Estatus de Cliente Emisor ' + e);
+        }
+    });
+}
+exports.updateEstatusSede = updateEstatusSede;

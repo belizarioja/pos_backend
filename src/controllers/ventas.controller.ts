@@ -4,6 +4,7 @@ import axios from 'axios'
 
 // DB
 import { pool } from '../database'
+let ERRORINT = ''
 
 export async function setHolds (req: Request, res: Response): Promise<Response | void> {
     try {
@@ -215,13 +216,16 @@ export async function setVenta (req: Request, res: Response): Promise<Response |
         const { idhold, idempresa, tasausd, totalusd, relacionado } = req.body;
         const baseigtf = 0
         const igtf = 0
+
+        await pool.query('BEGIN')
+
         let select = "select a.id, a.idcliente, a.idusuario, a.idtipofactura, b.idproducto, b.precio, b.cantidad, b.tasa, b.total, b.idunidad ";
         select += ", b.descuento, d.rif, d.urlfacturacion, d.tokenfacturacion, e.*, f.producto ";
         const from = "from t_holds a, t_holds_items b, t_usuarios c, t_empresas d, t_clientes e , t_productos f ";
         let where = " where a.id = b.idhold and a.idusuario = c.id and c.idempresa = d.id and a.idcliente = e.id and b.idproducto = f.id and a.id = $1";
         const resp = await pool.query(select + from + where, [idhold]);
         const itemventa = resp.rows[0]
-        console.log(itemventa)
+        // console.log(itemventa)
         const fecha = moment().format('YYYY-MM-DD HH:mm:ss')
         let secuencial = await getSecuencial(idempresa, itemventa.idtipofactura)
         secuencial = Number(secuencial) + 1
@@ -349,12 +353,25 @@ export async function setVenta (req: Request, res: Response): Promise<Response |
         // console.log(respintegracion)
         if (respintegracion) {
             numerocontrol = respintegracion.numerodocumento
+        } else {
+            
+            await pool.query('ROLLBACK')
+
+            const data = {
+                success: false,
+                resp: {
+                    message: ERRORINT
+                }
+            };
+            return res.status(202).json(data);
         }
         // AQUI TERMINA LA INTEGRACION CON FACTURACION SMART
         
         const sqlupd = 'update t_ventas set subtotal = $1, impuesto = $2, total = $3, descuentos = $4, numerointerno = $5, numerocontrol = $6 '        
         const whereupd = " where id = $7";
         await pool.query(sqlupd + whereupd, [subtotales, impuestos, totales, descuentos, numerointerno, numerocontrol, idventa]);
+
+        await pool.query('COMMIT')
 
         const data = {
             success: true,
@@ -374,9 +391,9 @@ export async function setVenta (req: Request, res: Response): Promise<Response |
 }
 
 async function setIntegracion (jsonbody: any, token: any, url: any) {
-    console.log(jsonbody)
-    console.log(token)
-    console.log(url)
+    // console.log(jsonbody)
+    // console.log(token)
+    // console.log(url)
     const headersjwt = {
         headers: {
           Authorization: 'Bearer ' + token
@@ -385,10 +402,11 @@ async function setIntegracion (jsonbody: any, token: any, url: any) {
     const resp = await axios.post(url, jsonbody, headersjwt)
     // console.log(resp.data)
     if(resp.data.success) {
-        console.log(resp.data.data)
+        // console.log(resp.data.data)
         return resp.data.data
     } else {
         console.log(resp.data.error.message)
+        ERRORINT = resp.data.error.message
         return false
     }
     
@@ -423,7 +441,8 @@ export async function getVentas (req: Request, res: Response): Promise<Response 
         sql += "a.subtotal, a.impuesto, a.total, a.totalusd, a.igtf, a.descuentos, a.idusuario, a.idtipofactura, d.tipofactura, e.nombre as usuario  ";
         const from = "from t_ventas a, t_clientes b, t_tipodocumentos c, t_tipofacturas d, t_usuarios e ";
         let where = " where a.idcliente = b.id and a.idusuario = e.id and b.idtipodocumento = c.id and a.idtipofactura = d.id and a.idempresa = $1";
-        const resp = await pool.query(sql + from + where, [idempresa]);
+        const orderby = " order by a.fecha asc "
+        const resp = await pool.query(sql + from + where + orderby, [idempresa]);
         // console.log( resp.rows)
         const data = {
             success: true,

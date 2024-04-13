@@ -17,6 +17,7 @@ const moment_1 = __importDefault(require("moment"));
 const axios_1 = __importDefault(require("axios"));
 // DB
 const database_1 = require("../database");
+let ERRORINT = '';
 function setHolds(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -230,13 +231,14 @@ function setVenta(req, res) {
             const { idhold, idempresa, tasausd, totalusd, relacionado } = req.body;
             const baseigtf = 0;
             const igtf = 0;
+            yield database_1.pool.query('BEGIN');
             let select = "select a.id, a.idcliente, a.idusuario, a.idtipofactura, b.idproducto, b.precio, b.cantidad, b.tasa, b.total, b.idunidad ";
             select += ", b.descuento, d.rif, d.urlfacturacion, d.tokenfacturacion, e.*, f.producto ";
             const from = "from t_holds a, t_holds_items b, t_usuarios c, t_empresas d, t_clientes e , t_productos f ";
             let where = " where a.id = b.idhold and a.idusuario = c.id and c.idempresa = d.id and a.idcliente = e.id and b.idproducto = f.id and a.id = $1";
             const resp = yield database_1.pool.query(select + from + where, [idhold]);
             const itemventa = resp.rows[0];
-            console.log(itemventa);
+            // console.log(itemventa)
             const fecha = (0, moment_1.default)().format('YYYY-MM-DD HH:mm:ss');
             let secuencial = yield getSecuencial(idempresa, itemventa.idtipofactura);
             secuencial = Number(secuencial) + 1;
@@ -360,10 +362,21 @@ function setVenta(req, res) {
             if (respintegracion) {
                 numerocontrol = respintegracion.numerodocumento;
             }
+            else {
+                yield database_1.pool.query('ROLLBACK');
+                const data = {
+                    success: false,
+                    resp: {
+                        message: ERRORINT
+                    }
+                };
+                return res.status(202).json(data);
+            }
             // AQUI TERMINA LA INTEGRACION CON FACTURACION SMART
             const sqlupd = 'update t_ventas set subtotal = $1, impuesto = $2, total = $3, descuentos = $4, numerointerno = $5, numerocontrol = $6 ';
             const whereupd = " where id = $7";
             yield database_1.pool.query(sqlupd + whereupd, [subtotales, impuestos, totales, descuentos, numerointerno, numerocontrol, idventa]);
+            yield database_1.pool.query('COMMIT');
             const data = {
                 success: true,
                 resp: {
@@ -383,9 +396,9 @@ function setVenta(req, res) {
 exports.setVenta = setVenta;
 function setIntegracion(jsonbody, token, url) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log(jsonbody);
-        console.log(token);
-        console.log(url);
+        // console.log(jsonbody)
+        // console.log(token)
+        // console.log(url)
         const headersjwt = {
             headers: {
                 Authorization: 'Bearer ' + token
@@ -394,11 +407,12 @@ function setIntegracion(jsonbody, token, url) {
         const resp = yield axios_1.default.post(url, jsonbody, headersjwt);
         // console.log(resp.data)
         if (resp.data.success) {
-            console.log(resp.data.data);
+            // console.log(resp.data.data)
             return resp.data.data;
         }
         else {
             console.log(resp.data.error.message);
+            ERRORINT = resp.data.error.message;
             return false;
         }
     });
@@ -433,7 +447,8 @@ function getVentas(req, res) {
             sql += "a.subtotal, a.impuesto, a.total, a.totalusd, a.igtf, a.descuentos, a.idusuario, a.idtipofactura, d.tipofactura, e.nombre as usuario  ";
             const from = "from t_ventas a, t_clientes b, t_tipodocumentos c, t_tipofacturas d, t_usuarios e ";
             let where = " where a.idcliente = b.id and a.idusuario = e.id and b.idtipodocumento = c.id and a.idtipofactura = d.id and a.idempresa = $1";
-            const resp = yield database_1.pool.query(sql + from + where, [idempresa]);
+            const orderby = " order by a.fecha asc ";
+            const resp = yield database_1.pool.query(sql + from + where + orderby, [idempresa]);
             // console.log( resp.rows)
             const data = {
                 success: true,
