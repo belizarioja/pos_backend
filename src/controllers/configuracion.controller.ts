@@ -23,37 +23,8 @@ export async function getConfiguracion (req: Request, res: Response): Promise<Re
 export async function updConfiguracion (req: Request, res: Response): Promise<Response | void> {
     try {
         const { id } = req.params;
-        const { tasabcv, rif, empresa, direccion, email, telefono, tokenfacturacion, urlfacturacion } = req.body;
+        const { tasabcv } = req.body;
         let upd = "update t_empresas set tasabcv = $1 ";
-        
-        if(rif.length > 0)
-        {
-            upd += ", rif = '" + rif + "'"
-        }
-        if(empresa.length > 0)
-        {
-            upd += ", empresa = '" + empresa + "'"
-        }
-        if(direccion.length > 0)
-        {
-            upd += ", direccion = '" + direccion + "'"
-        }
-        if(email.length > 0)
-        {
-            upd += ", email = '" + email + "'"
-        }
-        if(telefono.length > 0)
-        {
-            upd += ", telefono = '" + telefono + "'"
-        }
-        if(tokenfacturacion.length > 0)
-        {
-            upd += ", tokenfacturacion = '" + tokenfacturacion + "'"
-        }
-        if(urlfacturacion.length > 0)
-        {
-            upd += ", urlfacturacion = '" + urlfacturacion + "'"
-        }
         const where = " where id = $2 ";
         const resp = await pool.query(upd + where, [tasabcv, id]);
         const data = {

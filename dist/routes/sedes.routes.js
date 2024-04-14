@@ -5,4 +5,6 @@ const sedes_controller_1 = require("../controllers/sedes.controller");
 const router = (0, express_1.Router)();
 router.route('/estatus/:id').put(sedes_controller_1.updateEstatusSede);
 router.route('/').get(sedes_controller_1.getEmpresas);
+router.route('/').post(sedes_controller_1.setEmpresa);
+router.route('/').put(sedes_controller_1.updEmpresa);
 exports.default = router;

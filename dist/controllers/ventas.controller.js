@@ -242,7 +242,7 @@ function setVenta(req, res) {
             const fecha = (0, moment_1.default)().format('YYYY-MM-DD HH:mm:ss');
             let secuencial = yield getSecuencial(idempresa, itemventa.idtipofactura);
             secuencial = Number(secuencial) + 1;
-            // console.log('secuencial', secuencial)
+            console.log('secuencial', secuencial);
             const insert = "insert into t_ventas (idcliente, idempresa, idusuario, fecha, idtipofactura, igtf, secuencial, tasausd, totalusd) ";
             const values = " values ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id";
             let respventa = yield database_1.pool.query(insert + values, [itemventa.idcliente, idempresa, itemventa.idusuario, fecha, itemventa.idtipofactura, igtf, secuencial, tasausd, totalusd]);
