@@ -229,7 +229,7 @@ export async function setVenta (req: Request, res: Response): Promise<Response |
         const fecha = moment().format('YYYY-MM-DD HH:mm:ss')
         let secuencial = await getSecuencial(idempresa, itemventa.idtipofactura)
         secuencial = Number(secuencial) + 1
-        // console.log('secuencial', secuencial)
+        console.log('secuencial', secuencial)
 
         const insert = "insert into t_ventas (idcliente, idempresa, idusuario, fecha, idtipofactura, igtf, secuencial, tasausd, totalusd) ";
         const values = " values ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id";
