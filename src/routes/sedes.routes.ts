@@ -6,6 +6,6 @@ const router = Router();
 router.route('/estatus/:id').put(updateEstatusSede)
 router.route('/').get(getEmpresas)
 router.route('/').post(setEmpresa)
-router.route('/').put(updEmpresa)
+router.route('/:id').put(updEmpresa)
         
 export default router;

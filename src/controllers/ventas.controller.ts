@@ -307,65 +307,73 @@ export async function setVenta (req: Request, res: Response): Promise<Response |
         }
         totales = Number(totales) + igtf
         const numerointerno = secuencial.toString().padStart(8, '0')
-
-        // AQUI INICIA LA INTEGRACION CON FACTURACION SMART
-        const trackingid = await generateRandomString()
-        const jsonbody = {
-            rif: itemventa.rif,
-            trackingid: trackingid,
-            nombrecliente: itemventa.nombre,
-            rifcedulacliente: itemventa.documento,
-            direccioncliente: itemventa.direccion,
-            telefonocliente: itemventa.telefono,
-            emailcliente: itemventa.correo,
-            sucursal: itemventa.sucursal || '',
-            numerointerno: numerointerno,
-            relacionado: relacionado || '',
-            idtipodocumento: itemventa.idtipofactura,
-            subtotal: subtotales,
-            exento: exentos,
-            tasag: tasag,
-            baseg: baseg,
-            impuestog: impg,
-            tasar: tasar,
-            baser: baser,
-            impuestor: impr,
-            tasaa: tasaa,
-            basea: basea,
-            impuestoa: impa,
-            tasaigtf: 3,
-            baseigtf: baseigtf,
-            impuestoigtf: igtf,
-            total: totales,
-            tasacambio: tasausd > 0 ? Number(tasausd) : undefined,
-            idtipocedulacliente: itemventa.idtipodocumento || 1,
-            sendmail: 1,
-            cuerpofactura: cuerpofactura,
-            formasdepago: [{
-                forma: 'Caja',
-                valor: Number(totales)
-              }],
-            // observacion: obs.length > 0 ? obs : undefined
-        }
         let numerocontrol = '00-' + numerointerno 
-        const respintegracion = await setIntegracion(jsonbody, itemventa.tokenfacturacion, itemventa.urlfacturacion)
-        // console.log('respintegracion')
-        // console.log(respintegracion)
-        if (respintegracion) {
-            numerocontrol = respintegracion.numerodocumento
-        } else {
-            
-            await pool.query('ROLLBACK')
 
-            const data = {
-                success: false,
-                resp: {
-                    message: ERRORINT
-                }
-            };
-            return res.status(202).json(data);
+        // AQUI INICIA
+        // LA INTEGRACION
+        // CON FACTURACION SMART
+        console.log('itemventa.tokenfacturacion.length, itemventa.urlfacturacion.length')
+        console.log(itemventa.tokenfacturacion.length, itemventa.urlfacturacion.length)
+        if(itemventa.tokenfacturacion.length > 0 && itemventa.urlfacturacion.length > 0) {
+                const trackingid = await generateRandomString()
+            const jsonbody = {
+                rif: itemventa.rif,
+                trackingid: trackingid,
+                nombrecliente: itemventa.nombre,
+                rifcedulacliente: itemventa.documento,
+                direccioncliente: itemventa.direccion,
+                telefonocliente: itemventa.telefono,
+                emailcliente: itemventa.correo,
+                sucursal: itemventa.sucursal || '',
+                numerointerno: numerointerno,
+                relacionado: relacionado || '',
+                idtipodocumento: itemventa.idtipofactura,
+                subtotal: subtotales,
+                exento: exentos,
+                tasag: tasag,
+                baseg: baseg,
+                impuestog: impg,
+                tasar: tasar,
+                baser: baser,
+                impuestor: impr,
+                tasaa: tasaa,
+                basea: basea,
+                impuestoa: impa,
+                tasaigtf: 3,
+                baseigtf: baseigtf,
+                impuestoigtf: igtf,
+                total: totales,
+                tasacambio: tasausd > 0 ? Number(tasausd) : undefined,
+                idtipocedulacliente: itemventa.idtipodocumento || 1,
+                sendmail: 1,
+                cuerpofactura: cuerpofactura,
+                formasdepago: [{
+                    forma: 'Caja',
+                    valor: Number(totales)
+                }],
+                // observacion: obs.length > 0 ? obs : undefined
+            }
+            const respintegracion = await setIntegracion(jsonbody, itemventa.tokenfacturacion, itemventa.urlfacturacion)
+            // console.log('respintegracion')
+            // console.log(respintegracion)
+            if (respintegracion) {
+                numerocontrol = respintegracion.numerodocumento
+            } else {
+                
+                await pool.query('ROLLBACK')
+
+                const data = {
+                    success: false,
+                    resp: {
+                        message: ERRORINT
+                    }
+                };
+                return res.status(202).json(data);
+            }
         }
-        // AQUI TERMINA LA INTEGRACION CON FACTURACION SMART
+        // AQUI TERMINA 
+        // LA INTEGRACION
+        // CON FACTURACION SMART
         
         const sqlupd = 'update t_ventas set subtotal = $1, impuesto = $2, total = $3, descuentos = $4, numerointerno = $5, numerocontrol = $6 '        
         const whereupd = " where id = $7";
