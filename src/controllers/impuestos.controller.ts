@@ -7,7 +7,7 @@ export async function getImpuestos (req: Request, res: Response): Promise<Respon
     try {
         const select = "select * from t_impuestos ";
         const resp = await pool.query(select);
-        console.log( resp.rows)
+        // console.log( resp.rows)
         const data = {
             success: true,
             resp: resp.rows
