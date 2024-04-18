@@ -6,7 +6,7 @@ import { pool } from '../database'
 export async function getProductos (req: Request, res: Response): Promise<Response | void> {
     try {
         const { idcategoria, idempresa } = req.params;
-        const select = "select a.id, a.producto, a.descripcion, a.idcategoria, b.categoria, a.idimpuesto, c.impuesto, c.tasa, a.costo, a.precio, d.unidad, a.idunidad, a.inventario1, a.sku, a.costousd, a,preciousd, a.utilidad ";
+        const select = "select a.id, a.producto, a.descripcion, a.idcategoria, b.categoria, a.idimpuesto, c.impuesto, c.tasa, a.costo, a.precio, d.unidad, a.idunidad, a.inventario1, a.sku, a.costousd, a,preciousd, a.utilidad, a.intipoproducto ";
         const from = "from t_productos a, t_categorias b, t_impuestos c, t_unidades d ";
         let where = " where a.idcategoria = b.id and b.idempresa = $1 and a.idimpuesto = c.id and a.idunidad = d.id";
         if (Number(idcategoria) > 0) {
@@ -25,13 +25,13 @@ export async function getProductos (req: Request, res: Response): Promise<Respon
         return res.status(400).send('Error Listando producto ' + e);
     }
 }
-export async function setProductos (req: Request, res: Response): Promise<Response | void> {
+export async function setProducto (req: Request, res: Response): Promise<Response | void> {
     try {
-        const { producto, descripcion, idcategoria, idimpuesto, idunidad, costo, precio, inventario, sku, costousd, preciousd, utilidad } = req.body;
+        const { producto, descripcion, idcategoria, idimpuesto, idunidad, costo, precio, inventario, sku, costousd, preciousd, utilidad, intipoproducto } = req.body;
       
-        const insert = "insert into t_productos (producto, descripcion, idcategoria, idimpuesto, costo, precio, idunidad, inventario1, sku, costousd, preciousd, utilidad) ";
-        const values = " values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)";
-        await pool.query(insert + values, [producto, descripcion, idcategoria, idimpuesto, costo, precio, idunidad, inventario, sku, costousd, preciousd, utilidad]);
+        const insert = "insert into t_productos (producto, descripcion, idcategoria, idimpuesto, costo, precio, idunidad, inventario1, sku, costousd, preciousd, utilidad, intipoproducto) ";
+        const values = " values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)";
+        await pool.query(insert + values, [producto, descripcion, idcategoria, idimpuesto, costo, precio, idunidad, inventario, sku, costousd, preciousd, utilidad, intipoproducto]);
         const data = {
             success: true,
             resp: {

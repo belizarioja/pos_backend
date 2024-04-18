@@ -9,14 +9,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateProductos = exports.setProductos = exports.getProductos = void 0;
+exports.updateProductos = exports.setProducto = exports.getProductos = void 0;
 // DB
 const database_1 = require("../database");
 function getProductos(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { idcategoria, idempresa } = req.params;
-            const select = "select a.id, a.producto, a.descripcion, a.idcategoria, b.categoria, a.idimpuesto, c.impuesto, c.tasa, a.costo, a.precio, d.unidad, a.idunidad, a.inventario1, a.sku, a.costousd, a,preciousd, a.utilidad ";
+            const select = "select a.id, a.producto, a.descripcion, a.idcategoria, b.categoria, a.idimpuesto, c.impuesto, c.tasa, a.costo, a.precio, d.unidad, a.idunidad, a.inventario1, a.sku, a.costousd, a,preciousd, a.utilidad, a.intipoproducto ";
             const from = "from t_productos a, t_categorias b, t_impuestos c, t_unidades d ";
             let where = " where a.idcategoria = b.id and b.idempresa = $1 and a.idimpuesto = c.id and a.idunidad = d.id";
             if (Number(idcategoria) > 0) {
@@ -36,13 +36,13 @@ function getProductos(req, res) {
     });
 }
 exports.getProductos = getProductos;
-function setProductos(req, res) {
+function setProducto(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const { producto, descripcion, idcategoria, idimpuesto, idunidad, costo, precio, inventario, sku, costousd, preciousd, utilidad } = req.body;
-            const insert = "insert into t_productos (producto, descripcion, idcategoria, idimpuesto, costo, precio, idunidad, inventario1, sku, costousd, preciousd, utilidad) ";
-            const values = " values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)";
-            yield database_1.pool.query(insert + values, [producto, descripcion, idcategoria, idimpuesto, costo, precio, idunidad, inventario, sku, costousd, preciousd, utilidad]);
+            const { producto, descripcion, idcategoria, idimpuesto, idunidad, costo, precio, inventario, sku, costousd, preciousd, utilidad, intipoproducto } = req.body;
+            const insert = "insert into t_productos (producto, descripcion, idcategoria, idimpuesto, costo, precio, idunidad, inventario1, sku, costousd, preciousd, utilidad, intipoproducto) ";
+            const values = " values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)";
+            yield database_1.pool.query(insert + values, [producto, descripcion, idcategoria, idimpuesto, costo, precio, idunidad, inventario, sku, costousd, preciousd, utilidad, intipoproducto]);
             const data = {
                 success: true,
                 resp: {
@@ -56,7 +56,7 @@ function setProductos(req, res) {
         }
     });
 }
-exports.setProductos = setProductos;
+exports.setProducto = setProducto;
 function updateProductos(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
