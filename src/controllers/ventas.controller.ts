@@ -31,13 +31,16 @@ export async function setHolds (req: Request, res: Response): Promise<Response |
 }
 export async function setItemHolds (req: Request, res: Response): Promise<Response | void> {
     try {
-        const { idhold, idproducto, precio, cantidad, tasa, total, idunidad, descuento } = req.body;
+        const { idhold, idproducto, precio, cantidad, tasa, total, idunidad, descuento, intipoproducto } = req.body;
         // console.log(idhold, idproducto, precio, cantidad, tasa, total, idunidad)
+        console.log('intipoproducto, cantidad')
+        console.log(intipoproducto, cantidad)
         
+        // VERIFIFAR SI HAY STOCK O NO DEL PRODUCTO PRINCIPAL
         const selectinventario = "select inventario1 from t_productos where id = $1 ";
         const respinventario = await pool.query(selectinventario, [idproducto]);
-        // console.log('respinventario.rows[0].inventario1')
-        // console.log(respinventario.rows[0].inventario1)
+        console.log('respinventario.rows[0].inventario1')
+        console.log(respinventario.rows[0].inventario1)
         if(Number(respinventario.rows[0].inventario1) === 0) {
             return res.status(202).json( 
                 {
@@ -45,10 +48,30 @@ export async function setItemHolds (req: Request, res: Response): Promise<Respon
                     resp: 'Producto sin inventario'
                 })
         }  
+        
+        if(Number(intipoproducto) === 2) { // PRODUCTO COMPUESTO
+            // SELECCIONAR LOS PRODUCTOS SIMPLES QUE FORMAN EL COMPUESTO
+            const selectsimples = "select * from t_productos_compuesto where idproductopadre = $1 ";
+            const respsimples = await pool.query(selectsimples, [idproducto])
+            console.log(respsimples.rows)
+            for(const i in respsimples.rows) {
+                const simple = respsimples.rows[i]
+                const cantidadRestar = cantidad * simple.cantidad
+                const idsimple = simple.idproductohijo
+                console.log(cantidadRestar)
+                // SE DESCUENTAN DE LOS SIMPLES, TEMPORALMENTE, LA CANTIDAD CORRESPONDIENTE EN STOCK
+                const sqlsimple = "update t_productos set inventario1 = inventario1 - $1 ";
+                const whereupdsimple = " where id = $2";
+                await pool.query(sqlsimple + whereupdsimple, [cantidadRestar, idsimple]);
+            }
+
+        }
+        // SE DESCUENTAN TEMPORALMENTE, DEL PRODUCTO PRINCIPAL, LA CANTIDAD CORRESPONDIENTE EN STOCK
         const sql = "update t_productos set inventario1 = inventario1 - $1 ";
         const whereupd = " where id = $2";
         await pool.query(sql + whereupd, [cantidad, idproducto]);
         
+        // SE CREA EL ITEM DETALLE DEL HOLD TEMPORAL
         const insert = "insert into t_holds_items (idhold, idproducto, precio, cantidad, tasa, total, idunidad, descuento) ";
         const values = " values ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id";
         let resp = await pool.query(insert + values, [idhold, idproducto, precio, cantidad, tasa, total, idunidad, descuento]);
@@ -60,7 +83,7 @@ export async function setItemHolds (req: Request, res: Response): Promise<Respon
                 iditemhold
             }
         };
-        return res.status(200).json(data); 
+        return res.status(200).json(data);
         
     }
     catch (e) {
@@ -69,8 +92,33 @@ export async function setItemHolds (req: Request, res: Response): Promise<Respon
 }
 export async function updItemHolds (req: Request, res: Response): Promise<Response | void> {
     try {
-        const { iditemhold, cantidad, total, idproducto, accion } = req.body;
-        let sql = 'update t_productos set '
+        const { iditemhold, cantidad, total, idproducto, accion, intipoproducto } = req.body;
+        console.log('intipoproducto, cantidad')
+        console.log(intipoproducto, cantidad)
+        if(Number(intipoproducto) === 2) { // PRODUCTO COMPUESTO
+            // SELECCIONAR LOS PRODUCTOS SIMPLES QUE FORMAN EL COMPUESTO
+            const selectsimples = "select * from t_productos_compuesto where idproductopadre = $1 ";
+            const respsimples = await pool.query(selectsimples, [idproducto])
+            console.log(respsimples.rows)
+            for(const i in respsimples.rows) {
+                const simple = respsimples.rows[i]
+                const cantidadRestar = simple.cantidad
+                const idsimple = simple.idproductohijo
+                console.log(cantidadRestar)
+                // SE DESCUENTAN o SUMAN DE LOS SIMPLES, LA CANTIDAD CORRESPONDIENTE EN STOCK
+                let sqlsimple = "update t_productos  ";
+                if(accion === 1) {
+                    sqlsimple += " set inventario1 = inventario1 - $1 ";
+                } else {
+                    sqlsimple += " set inventario1 = inventario1 + $1 ";
+                }
+                const whereupdsimple = " where id = $2";
+                await pool.query(sqlsimple + whereupdsimple, [cantidadRestar, idsimple]);                
+            }
+
+        }
+         
+        let sql = 'update t_productos set '        
         if(accion === 1) {
             const selectinventario = "select inventario1 from t_productos where id = $1 ";
             const respinventario = await pool.query(selectinventario, [idproducto]);
@@ -102,6 +150,7 @@ export async function updItemHolds (req: Request, res: Response): Promise<Respon
             resp: 'Item holds actualizado con éxito'
         };
         return res.status(200).json(data);
+    
         
     }
     catch (e) {
@@ -132,7 +181,7 @@ export async function getItemsHolds (req: Request, res: Response): Promise<Respo
     try {
         const { idholds } = req.params;
 
-        const select = "select a.id as iditemhold, a.idproducto, a.precio, a.cantidad, a.tasa, a.total, a.idunidad, b.producto, b.idcategoria, c.categoria ";
+        const select = "select a.id as iditemhold, a.idproducto, a.precio, a.cantidad, a.tasa, a.total, a.idunidad, b.intipoproducto, b.producto, b.idcategoria, c.categoria ";
         const from = "from t_holds_items a, t_productos b, t_categorias c ";
         let where = " where a.idproducto = b.id and b.idcategoria = c.id and a.idhold = $1";
         const resp = await pool.query(select + from + where, [idholds]);
