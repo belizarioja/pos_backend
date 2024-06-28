@@ -303,12 +303,13 @@ function setVenta(req, res) {
             const igtf = 0;
             yield database_1.pool.query('BEGIN');
             let select = "select a.id, a.idcliente, a.idusuario, a.idtipofactura, b.idproducto, b.precio, b.cantidad, b.tasa, b.total, b.idunidad ";
-            select += ", b.descuento, d.rif, d.urlfacturacion, d.tokenfacturacion, e.*, f.producto ";
-            const from = "from t_holds a, t_holds_items b, t_usuarios c, t_empresas d, t_clientes e , t_productos f ";
+            select += ", b.descuento, d.rif, d.urlfacturacion, d.tokenfacturacion, e.*, f.producto, f.sku  ";
+            const from = "from t_holds a, t_holds_items b, t_usuarios c, t_empresas d, t_clientes e, t_productos f ";
             let where = " where a.id = b.idhold and a.idusuario = c.id and c.idempresa = d.id and a.idcliente = e.id and b.idproducto = f.id and a.id = $1";
             const resp = yield database_1.pool.query(select + from + where, [idhold]);
             const itemventa = resp.rows[0];
-            // console.log(itemventa)
+            console.log('itemventa : ');
+            console.log(itemventa);
             const fecha = (0, moment_1.default)().format('YYYY-MM-DD HH:mm:ss');
             let secuencial = yield getSecuencial(idempresa, itemventa.idtipofactura);
             secuencial = Number(secuencial) + 1;
@@ -372,8 +373,8 @@ function setVenta(req, res) {
                 const values2 = " values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ";
                 yield database_1.pool.query(insert2 + values2, [idventa, idproducto, precio, cantidad, impuesto, tasa, subtotal, descuento, total, idunidad]);
                 const obj = {
-                    codigo: itemventa.sku || '000' + (Number(i) + 1),
-                    descripcion: itemventa.producto,
+                    codigo: item.sku || '000' + (Number(i) + 1),
+                    descripcion: item.producto,
                     comentario: '',
                     precio: Number(item.precio),
                     cantidad: Number(item.cantidad),

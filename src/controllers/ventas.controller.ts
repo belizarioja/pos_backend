@@ -293,12 +293,13 @@ export async function setVenta (req: Request, res: Response): Promise<Response |
         await pool.query('BEGIN')
 
         let select = "select a.id, a.idcliente, a.idusuario, a.idtipofactura, b.idproducto, b.precio, b.cantidad, b.tasa, b.total, b.idunidad ";
-        select += ", b.descuento, d.rif, d.urlfacturacion, d.tokenfacturacion, e.*, f.producto ";
-        const from = "from t_holds a, t_holds_items b, t_usuarios c, t_empresas d, t_clientes e , t_productos f ";
+        select += ", b.descuento, d.rif, d.urlfacturacion, d.tokenfacturacion, e.*, f.producto, f.sku  ";
+        const from = "from t_holds a, t_holds_items b, t_usuarios c, t_empresas d, t_clientes e, t_productos f ";
         let where = " where a.id = b.idhold and a.idusuario = c.id and c.idempresa = d.id and a.idcliente = e.id and b.idproducto = f.id and a.id = $1";
         const resp = await pool.query(select + from + where, [idhold]);
         const itemventa = resp.rows[0]
-        // console.log(itemventa)
+        console.log('itemventa : ')
+        console.log(itemventa)
         const fecha = moment().format('YYYY-MM-DD HH:mm:ss')
         let secuencial = await getSecuencial(idempresa, itemventa.idtipofactura)
         secuencial = Number(secuencial) + 1
@@ -366,8 +367,8 @@ export async function setVenta (req: Request, res: Response): Promise<Response |
             const values2 = " values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ";
             await pool.query(insert2 + values2, [idventa, idproducto, precio, cantidad, impuesto, tasa, subtotal, descuento, total, idunidad ]);
             const obj = {
-                codigo: itemventa.sku || '000' + (Number(i) + 1),
-                descripcion: itemventa.producto,
+                codigo: item.sku || '000' + (Number(i) + 1),
+                descripcion: item.producto,
                 comentario: '',
                 precio: Number(item.precio), // base
                 cantidad: Number(item.cantidad),
@@ -388,7 +389,7 @@ export async function setVenta (req: Request, res: Response): Promise<Response |
         console.log('itemventa.tokenfacturacion.length, itemventa.urlfacturacion.length')
         console.log(itemventa.tokenfacturacion.length, itemventa.urlfacturacion.length)
         if(itemventa.tokenfacturacion.length > 0 && itemventa.urlfacturacion.length > 0) {
-                const trackingid = await generateRandomString()
+            const trackingid = await generateRandomString()
             const jsonbody = {
                 rif: itemventa.rif,
                 trackingid: trackingid,
