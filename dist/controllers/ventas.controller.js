@@ -109,18 +109,18 @@ function updItemHolds(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { iditemhold, cantidad, total, idproducto, accion, intipoproducto } = req.body;
-            console.log('intipoproducto, cantidad');
-            console.log(intipoproducto, cantidad);
+            // console.log('intipoproducto, cantidad')
+            // console.log(intipoproducto, cantidad)
             if (Number(intipoproducto) === 2) { // PRODUCTO COMPUESTO
                 // SELECCIONAR LOS PRODUCTOS SIMPLES QUE FORMAN EL COMPUESTO
                 const selectsimples = "select * from t_productos_compuesto where idproductopadre = $1 ";
                 const respsimples = yield database_1.pool.query(selectsimples, [idproducto]);
-                console.log(respsimples.rows);
+                // console.log(respsimples.rows)
                 for (const i in respsimples.rows) {
                     const simple = respsimples.rows[i];
                     const cantidadRestar = simple.cantidad;
                     const idsimple = simple.idproductohijo;
-                    console.log(cantidadRestar);
+                    // console.log(cantidadRestar)
                     // SE DESCUENTAN o SUMAN DE LOS SIMPLES, LA CANTIDAD CORRESPONDIENTE EN STOCK
                     let sqlsimple = "update t_productos  ";
                     if (accion === 1) {
@@ -225,12 +225,12 @@ function deleteItemHolds(req, res) {
                 // SELECCIONAR LOS PRODUCTOS SIMPLES QUE FORMAN EL COMPUESTO
                 const selectsimples = "select * from t_productos_compuesto where idproductopadre = $1 ";
                 const respsimples = yield database_1.pool.query(selectsimples, [idproducto]);
-                console.log(respsimples.rows);
+                // console.log(respsimples.rows)
                 for (const i in respsimples.rows) {
                     const simple = respsimples.rows[i];
                     const cantidadSumar = simple.cantidad * cantidad;
                     const idsimple = simple.idproductohijo;
-                    console.log(cantidadSumar);
+                    // console.log(cantidadSumar)
                     // SE SUMAN DE LOS SIMPLES, LA CANTIDAD CORRESPONDIENTE EN STOCK
                     let sqlsimple = "update t_productos  ";
                     sqlsimple += " set inventario1 = inventario1 + $1 ";
@@ -267,7 +267,7 @@ function deleteHolds(req, res) {
                 const from = "from t_holds_items ";
                 let where1 = " where idhold = $1";
                 const resp = yield database_1.pool.query(select + from + where1, [idhold]);
-                console.log(resp.rows);
+                // console.log( resp.rows)
                 for (let i = 0; i < resp.rows.length; i++) {
                     const idproducto = resp.rows[i].idproducto;
                     const cantidad = resp.rows[i].cantidad;
@@ -308,8 +308,7 @@ function setVenta(req, res) {
             let where = " where a.id = b.idhold and a.idusuario = c.id and c.idempresa = d.id and a.idcliente = e.id and b.idproducto = f.id and a.id = $1";
             const resp = yield database_1.pool.query(select + from + where, [idhold]);
             const itemventa = resp.rows[0];
-            console.log('itemventa : ');
-            console.log(itemventa);
+            // console.log(itemventa)
             const fecha = (0, moment_1.default)().format('YYYY-MM-DD HH:mm:ss');
             let secuencial = yield getSecuencial(idempresa, itemventa.idtipofactura);
             secuencial = Number(secuencial) + 1;
@@ -391,8 +390,6 @@ function setVenta(req, res) {
             // AQUI INICIA
             // LA INTEGRACION
             // CON FACTURACION SMART
-            console.log('itemventa.tokenfacturacion.length, itemventa.urlfacturacion.length');
-            console.log(itemventa.tokenfacturacion.length, itemventa.urlfacturacion.length);
             if (itemventa.tokenfacturacion.length > 0 && itemventa.urlfacturacion.length > 0) {
                 const trackingid = yield generateRandomString();
                 const jsonbody = {
@@ -512,9 +509,9 @@ function getSecuencial(idempresa, idtipofactura) {
         console.log(idempresa, idtipofactura);
         const sql = " SELECT MAX(secuencial) FROM t_ventas ";
         const where = " where idempresa = $1 and idtipofactura = $2 ";
-        console.log(sql + where);
+        // console.log(sql + where);
         const resp = yield database_1.pool.query(sql + where, [idempresa, idtipofactura]);
-        console.log(resp.rows[0].max);
+        console.log('MAX(secuencial): ', resp.rows[0].max);
         return resp.rows[0].max || 0;
     });
 }
@@ -606,10 +603,10 @@ function getVentaNumeroInterno(req, res) {
             let where = " where a.idcliente = b.id and a.idusuario = e.id and b.idtipodocumento = c.id and a.idtipofactura = d.id ";
             where += " and a.idempresa = $1 and a.idtipofactura = $2 and a.numerointerno = $3 ";
             const resp = yield database_1.pool.query(sql + from + where, [idempresa, idtipofactura, numerointerno]);
-            console.log(resp.rows);
+            // console.log(resp.rows)
             if (resp.rows.length > 0) {
                 const respdetalles = yield obtenerItemsVentas(resp.rows[0].id);
-                console.log(respdetalles);
+                // console.log(respdetalles)
                 const data = {
                     success: true,
                     resp: resp.rows[0],
