@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.anularVenta = exports.getVentaNumeroInterno = exports.getVenta = exports.getItemsVentas = exports.getVentas = exports.setVenta = exports.deleteHolds = exports.deleteItemHolds = exports.getItemsHolds = exports.getHolds = exports.updComentarioItemHolds = exports.updItemHolds = exports.setItemHolds = exports.setHolds = void 0;
+exports.anularVenta = exports.getVentaNumeroInterno = exports.getVenta = exports.getItemsVentas = exports.getVentas = exports.setVenta = exports.deleteHolds = exports.deleteItemHolds = exports.getItemsHolds = exports.getHolds = exports.updPrecioItemHolds = exports.updComentarioItemHolds = exports.updItemHolds = exports.setItemHolds = exports.setHolds = void 0;
 const moment_1 = __importDefault(require("moment"));
 const axios_1 = __importDefault(require("axios"));
 // DB
@@ -195,6 +195,27 @@ function updComentarioItemHolds(req, res) {
     });
 }
 exports.updComentarioItemHolds = updComentarioItemHolds;
+function updPrecioItemHolds(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { iditemhold, precio, total } = req.body;
+            // console.log('intipoproducto, cantidad')
+            // console.log(intipoproducto, cantidad)
+            const update = "update t_holds_items set precio = $1, total = $2 ";
+            const where = " where id = $3 ";
+            yield database_1.pool.query(update + where, [precio, total, iditemhold]);
+            const data = {
+                success: true,
+                resp: 'Precio de Item holds actualizado con éxito'
+            };
+            return res.status(200).json(data);
+        }
+        catch (e) {
+            return res.status(400).send('Error actualizando comentario de item holds ' + e);
+        }
+    });
+}
+exports.updPrecioItemHolds = updPrecioItemHolds;
 function getHolds(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -220,7 +241,7 @@ function getItemsHolds(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { idholds } = req.params;
-            const select = "select a.id as iditemhold, a.idproducto, a.comentario, a.precio, a.cantidad, a.tasa, a.total, a.idunidad, b.intipoproducto, b.producto, b.idcategoria, c.categoria ";
+            const select = "select a.id as iditemhold, a.idproducto, a.comentario, a.precio, a.precio as precioreal, a.cantidad, a.tasa, a.total, a.idunidad, b.intipoproducto, b.producto, b.idcategoria, c.categoria ";
             const from = "from t_holds_items a, t_productos b, t_categorias c ";
             let where = " where a.idproducto = b.id and b.idcategoria = c.id and a.idhold = $1";
             const resp = yield database_1.pool.query(select + from + where, [idholds]);
@@ -562,7 +583,7 @@ function getVentas(req, res) {
 exports.getVentas = getVentas;
 function obtenerItemsVentas(id) {
     return __awaiter(this, void 0, void 0, function* () {
-        const select = "select a.id as iditemventa, a.idproducto, a.precio, a.cantidad, a.tasa, a.total, a.subtotal, a.idunidad, b.producto ";
+        const select = "select a.id as iditemventa, a.idproducto, a.precio, a.cantidad, a.tasa, a.total, a.subtotal, a.idunidad, a.comentario, b.producto ";
         const from = "from t_ventas_items a, t_productos b ";
         let where = " where a.idproducto = b.id and a.idventa = $1";
         const resp = yield database_1.pool.query(select + from + where, [id]);

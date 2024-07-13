@@ -8,6 +8,7 @@ router.route('/setventa').post(ventas_controller_1.setVenta);
 router.route('/setitemholds').post(ventas_controller_1.setItemHolds);
 router.route('/upditemholds').post(ventas_controller_1.updItemHolds);
 router.route('/updcomentarioitemholds').post(ventas_controller_1.updComentarioItemHolds);
+router.route('/updprecioitemholds').post(ventas_controller_1.updPrecioItemHolds);
 router.route('/deleteitemholds').post(ventas_controller_1.deleteItemHolds);
 router.route('/deleteholds').post(ventas_controller_1.deleteHolds);
 router.route('/gethols/:idusuario').get(ventas_controller_1.getHolds);

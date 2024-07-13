@@ -182,6 +182,26 @@ export async function updComentarioItemHolds (req: Request, res: Response): Prom
         return res.status(400).send('Error actualizando comentario de item holds ' + e);
     }
 }
+export async function updPrecioItemHolds (req: Request, res: Response): Promise<Response | void> {
+    try {
+        const { iditemhold, precio, total } = req.body;
+        // console.log('intipoproducto, cantidad')
+        // console.log(intipoproducto, cantidad)
+     
+        const update = "update t_holds_items set precio = $1, total = $2 ";
+        const where = " where id = $3 ";
+        await pool.query(update + where, [precio, total, iditemhold]);
+        const data = {
+            success: true,
+            resp: 'Precio de Item holds actualizado con éxito'
+        };
+        return res.status(200).json(data);    
+        
+    }
+    catch (e) {
+        return res.status(400).send('Error actualizando comentario de item holds ' + e);
+    }
+}
 
 export async function getHolds (req: Request, res: Response): Promise<Response | void> {
     try {
@@ -206,7 +226,7 @@ export async function getItemsHolds (req: Request, res: Response): Promise<Respo
     try {
         const { idholds } = req.params;
 
-        const select = "select a.id as iditemhold, a.idproducto, a.comentario, a.precio, a.cantidad, a.tasa, a.total, a.idunidad, b.intipoproducto, b.producto, b.idcategoria, c.categoria ";
+        const select = "select a.id as iditemhold, a.idproducto, a.comentario, a.precio, a.precio as precioreal, a.cantidad, a.tasa, a.total, a.idunidad, b.intipoproducto, b.producto, b.idcategoria, c.categoria ";
         const from = "from t_holds_items a, t_productos b, t_categorias c ";
         let where = " where a.idproducto = b.id and b.idcategoria = c.id and a.idhold = $1";
         const resp = await pool.query(select + from + where, [idholds]);
@@ -557,7 +577,7 @@ export async function getVentas (req: Request, res: Response): Promise<Response 
     }
 }
 async function obtenerItemsVentas (id: any) {
-    const select = "select a.id as iditemventa, a.idproducto, a.precio, a.cantidad, a.tasa, a.total, a.subtotal, a.idunidad, b.producto ";
+    const select = "select a.id as iditemventa, a.idproducto, a.precio, a.cantidad, a.tasa, a.total, a.subtotal, a.idunidad, a.comentario, b.producto ";
     const from = "from t_ventas_items a, t_productos b ";
     let where = " where a.idproducto = b.id and a.idventa = $1";
     const resp = await pool.query(select + from + where, [id]);

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updConfiguracion = exports.getConfiguracion = void 0;
+exports.updConfiguracion = exports.getNumeroInterno = exports.getConfiguracion = void 0;
 // DB
 const database_1 = require("../database");
 function getConfiguracion(req, res) {
@@ -32,6 +32,26 @@ function getConfiguracion(req, res) {
     });
 }
 exports.getConfiguracion = getConfiguracion;
+function getNumeroInterno(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { idempresa } = req.params;
+            const sql = "select max (numerointerno) as numerointerno ";
+            const from = " from t_ventas ";
+            const where = " where idempresa = $1 ";
+            const resp = yield database_1.pool.query(sql + from + where, [idempresa]);
+            const data = {
+                success: true,
+                resp: resp.rows[0]
+            };
+            return res.status(200).json(data);
+        }
+        catch (e) {
+            return res.status(400).send('Error Consultando Configuración >>>> ' + e);
+        }
+    });
+}
+exports.getNumeroInterno = getNumeroInterno;
 function updConfiguracion(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
