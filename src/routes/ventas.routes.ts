@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { setHolds, setItemHolds, updItemHolds, getHolds, getItemsHolds, deleteItemHolds, deleteHolds, setVenta, getVentas, getItemsVentas, getVenta, getVentaNumeroInterno, anularVenta } from '../controllers/ventas.controller';
+import { setHolds, setItemHolds, updItemHolds, getHolds, getItemsHolds, deleteItemHolds, deleteHolds, setVenta, getVentas, getItemsVentas, getVenta, getVentaNumeroInterno, anularVenta, updComentarioItemHolds } from '../controllers/ventas.controller';
 
 const router = Router();
 
@@ -7,6 +7,7 @@ router.route('/setholds').post(setHolds)
 router.route('/setventa').post(setVenta)
 router.route('/setitemholds').post(setItemHolds)
 router.route('/upditemholds').post(updItemHolds)
+router.route('/updcomentarioitemholds').post(updComentarioItemHolds)
 router.route('/deleteitemholds').post(deleteItemHolds)
 router.route('/deleteholds').post(deleteHolds)
 router.route('/gethols/:idusuario').get(getHolds)

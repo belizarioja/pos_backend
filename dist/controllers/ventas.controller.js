@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.anularVenta = exports.getVentaNumeroInterno = exports.getVenta = exports.getItemsVentas = exports.getVentas = exports.setVenta = exports.deleteHolds = exports.deleteItemHolds = exports.getItemsHolds = exports.getHolds = exports.updItemHolds = exports.setItemHolds = exports.setHolds = void 0;
+exports.anularVenta = exports.getVentaNumeroInterno = exports.getVenta = exports.getItemsVentas = exports.getVentas = exports.setVenta = exports.deleteHolds = exports.deleteItemHolds = exports.getItemsHolds = exports.getHolds = exports.updComentarioItemHolds = exports.updItemHolds = exports.setItemHolds = exports.setHolds = void 0;
 const moment_1 = __importDefault(require("moment"));
 const axios_1 = __importDefault(require("axios"));
 // DB
@@ -48,8 +48,8 @@ function setItemHolds(req, res) {
         try {
             const { idhold, idproducto, precio, cantidad, tasa, total, idunidad, descuento, intipoproducto } = req.body;
             // console.log(idhold, idproducto, precio, cantidad, tasa, total, idunidad)
-            console.log('intipoproducto, cantidad');
-            console.log(intipoproducto, cantidad);
+            // console.log('intipoproducto, cantidad')
+            // console.log(intipoproducto, cantidad)
             if (intipoproducto < 3) {
                 // VERIFIFAR SI HAY STOCK O NO DEL PRODUCTO PRINCIPAL SIMPLE O COMPUESTO
                 const selectinventario = "select inventario1 from t_productos where id = $1 ";
@@ -174,6 +174,27 @@ function updItemHolds(req, res) {
     });
 }
 exports.updItemHolds = updItemHolds;
+function updComentarioItemHolds(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { iditemhold, comentario } = req.body;
+            // console.log('intipoproducto, cantidad')
+            // console.log(intipoproducto, cantidad)
+            const update = "update t_holds_items set comentario = $1 ";
+            const where = " where id = $2 ";
+            yield database_1.pool.query(update + where, [comentario, iditemhold]);
+            const data = {
+                success: true,
+                resp: 'Comentario de Item holds actualizado con éxito'
+            };
+            return res.status(200).json(data);
+        }
+        catch (e) {
+            return res.status(400).send('Error actualizando comentario de item holds ' + e);
+        }
+    });
+}
+exports.updComentarioItemHolds = updComentarioItemHolds;
 function getHolds(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -199,7 +220,7 @@ function getItemsHolds(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { idholds } = req.params;
-            const select = "select a.id as iditemhold, a.idproducto, a.precio, a.cantidad, a.tasa, a.total, a.idunidad, b.intipoproducto, b.producto, b.idcategoria, c.categoria ";
+            const select = "select a.id as iditemhold, a.idproducto, a.comentario, a.precio, a.cantidad, a.tasa, a.total, a.idunidad, b.intipoproducto, b.producto, b.idcategoria, c.categoria ";
             const from = "from t_holds_items a, t_productos b, t_categorias c ";
             let where = " where a.idproducto = b.id and b.idcategoria = c.id and a.idhold = $1";
             const resp = yield database_1.pool.query(select + from + where, [idholds]);
@@ -303,7 +324,7 @@ function setVenta(req, res) {
             const igtf = 0;
             yield database_1.pool.query('BEGIN');
             let select = "select a.id, a.idcliente, a.idusuario, a.idtipofactura, b.idproducto, b.precio, b.cantidad, b.tasa, b.total, b.idunidad ";
-            select += ", b.descuento, d.rif, d.urlfacturacion, d.tokenfacturacion, e.*, f.producto, f.sku  ";
+            select += ", b.descuento, b.comentario, d.rif, d.urlfacturacion, d.tokenfacturacion, e.*, f.producto, f.sku  ";
             const from = "from t_holds a, t_holds_items b, t_usuarios c, t_empresas d, t_clientes e, t_productos f ";
             let where = " where a.id = b.idhold and a.idusuario = c.id and c.idempresa = d.id and a.idcliente = e.id and b.idproducto = f.id and a.id = $1";
             const resp = yield database_1.pool.query(select + from + where, [idhold]);
@@ -368,13 +389,14 @@ function setVenta(req, res) {
                 const descuento = item.descuento;
                 const total = subtotal + (impuesto * item.cantidad);
                 const idunidad = item.idunidad;
-                const insert2 = "insert into t_ventas_items (idventa, idproducto, precio, cantidad, impuesto, tasa, subtotal, descuento, total, idunidad ) ";
-                const values2 = " values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ";
-                yield database_1.pool.query(insert2 + values2, [idventa, idproducto, precio, cantidad, impuesto, tasa, subtotal, descuento, total, idunidad]);
+                const comentario = item.comentario || '';
+                const insert2 = "insert into t_ventas_items (idventa, idproducto, precio, cantidad, impuesto, tasa, subtotal, descuento, total, idunidad, comentario ) ";
+                const values2 = " values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) ";
+                yield database_1.pool.query(insert2 + values2, [idventa, idproducto, precio, cantidad, impuesto, tasa, subtotal, descuento, total, idunidad, comentario]);
                 const obj = {
                     codigo: item.sku || '000' + (Number(i) + 1),
                     descripcion: item.producto,
-                    comentario: '',
+                    comentario: item.comentario || '',
                     precio: Number(item.precio),
                     cantidad: Number(item.cantidad),
                     tasa: Number(tasa),
