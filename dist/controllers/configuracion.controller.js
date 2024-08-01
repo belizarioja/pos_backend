@@ -16,7 +16,7 @@ function getConfiguracion(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { id } = req.params;
-            const sql = "select id, tasabcv, urlfacturacion, tokenfacturacion, empresa, rif, direccion, telefono, email ";
+            const sql = "select id, tasabcv, urlfacturacion, tokenfacturacion, empresa, rif, direccion, telefono, email, tipomoneda, mostrartotal ";
             const from = " from t_empresas ";
             const where = " where id = $1 ";
             const resp = yield database_1.pool.query(sql + from + where, [id]);
@@ -56,10 +56,14 @@ function updConfiguracion(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { id } = req.params;
-            const { tasabcv } = req.body;
-            let upd = "update t_empresas set tasabcv = $1 ";
-            const where = " where id = $2 ";
-            const resp = yield database_1.pool.query(upd + where, [tasabcv, id]);
+            const { tasabcv, tipomoneda, mostrartotal } = req.body;
+            if (tasabcv > 0) {
+                const sql = "update t_productos set costo = costousd * $2, precio = preciousd * $2 ";
+                const where = " where idcategoria in (select id from t_categorias where idempresa = $1 )";
+                yield database_1.pool.query(sql + where, [id, tasabcv]);
+            }
+            let upd = "update t_empresas set tasabcv = $1, tipomoneda = $2, mostrartotal = $3 where id = $4 ";
+            yield database_1.pool.query(upd, [tasabcv, tipomoneda, mostrartotal, id]);
             const data = {
                 success: true,
                 resp: 'Configuración actualizada con éxito'

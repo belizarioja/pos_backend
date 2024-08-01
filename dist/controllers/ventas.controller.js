@@ -72,7 +72,7 @@ function setItemHolds(req, res) {
                     const simple = respsimples.rows[i];
                     const cantidadRestar = cantidad * simple.cantidad;
                     const idsimple = simple.idproductohijo;
-                    console.log(cantidadRestar);
+                    // console.log(cantidadRestar)
                     // SE DESCUENTAN DE LOS SIMPLES, TEMPORALMENTE, LA CANTIDAD CORRESPONDIENTE EN STOCK
                     const sqlsimple = "update t_productos set inventario1 = inventario1 - $1 ";
                     const whereupdsimple = " where id = $2";
@@ -345,7 +345,7 @@ function setVenta(req, res) {
             const igtf = 0;
             yield database_1.pool.query('BEGIN');
             let select = "select a.id, a.idcliente, a.idusuario, a.idtipofactura, b.idproducto, b.precio, b.cantidad, b.tasa, b.total, b.idunidad ";
-            select += ", b.descuento, b.comentario, d.rif, d.urlfacturacion, d.tokenfacturacion, e.*, f.producto, f.sku  ";
+            select += ", b.descuento, b.comentario, d.rif, d.urlfacturacion, d.tokenfacturacion, d.tipomoneda, e.*, f.producto, f.sku  ";
             const from = "from t_holds a, t_holds_items b, t_usuarios c, t_empresas d, t_clientes e, t_productos f ";
             let where = " where a.id = b.idhold and a.idusuario = c.id and c.idempresa = d.id and a.idcliente = e.id and b.idproducto = f.id and a.id = $1";
             const resp = yield database_1.pool.query(select + from + where, [idhold]);
@@ -354,7 +354,7 @@ function setVenta(req, res) {
             const fecha = (0, moment_1.default)().format('YYYY-MM-DD HH:mm:ss');
             let secuencial = yield getSecuencial(idempresa, itemventa.idtipofactura);
             secuencial = Number(secuencial) + 1;
-            console.log('secuencial', secuencial);
+            // console.log('secuencial', secuencial)
             const insert = "insert into t_ventas (idcliente, idempresa, idusuario, fecha, idtipofactura, igtf, secuencial, tasausd, totalusd) ";
             const values = " values ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id";
             let respventa = yield database_1.pool.query(insert + values, [itemventa.idcliente, idempresa, itemventa.idusuario, fecha, itemventa.idtipofactura, igtf, secuencial, tasausd, totalusd]);
@@ -464,6 +464,7 @@ function setVenta(req, res) {
                     total: totales,
                     tasacambio: tasausd > 0 ? Number(tasausd) : undefined,
                     idtipocedulacliente: itemventa.idtipodocumento || 1,
+                    tipomoneda: itemventa.tipomoneda || 1,
                     sendmail: 1,
                     cuerpofactura: cuerpofactura,
                     formasdepago: [{
@@ -549,12 +550,12 @@ function generateRandomString() {
 }
 function getSecuencial(idempresa, idtipofactura) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log(idempresa, idtipofactura);
+        // console.log(idempresa, idtipofactura)
         const sql = " SELECT MAX(secuencial) FROM t_ventas ";
         const where = " where idempresa = $1 and idtipofactura = $2 ";
         // console.log(sql + where);
         const resp = yield database_1.pool.query(sql + where, [idempresa, idtipofactura]);
-        console.log('MAX(secuencial): ', resp.rows[0].max);
+        // console.log('MAX(secuencial): ', resp.rows[0].max);
         return resp.rows[0].max || 0;
     });
 }
