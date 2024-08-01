@@ -16,12 +16,12 @@ function getCategorias(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { idempresa } = req.params;
-            console.log('idempresa');
-            console.log(idempresa);
+            // console.log('idempresa')
+            // console.log(idempresa)
             const select = "select * from t_categorias ";
             const where = " where idempresa = $1";
             const resp = yield database_1.pool.query(select + where, [idempresa]);
-            console.log(resp.rows);
+            // console.log( resp.rows)
             const data = {
                 success: true,
                 resp: resp.rows
@@ -38,8 +38,8 @@ function setCategoria(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { categoria, descripcion, idempresa } = req.body;
-            console.log('idempresa');
-            console.log(idempresa);
+            // console.log('idempresa')
+            // console.log(idempresa)
             const insert = "insert into t_categorias (categoria, descripcion, idempresa) ";
             const values = " values ($1, $2, $3)";
             yield database_1.pool.query(insert + values, [categoria, descripcion, idempresa]);

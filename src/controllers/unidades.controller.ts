@@ -7,7 +7,7 @@ export async function getUnidades (req: Request, res: Response): Promise<Respons
     try {
         const select = "select * from t_unidades ";
         const resp = await pool.query(select);
-        console.log( resp.rows)
+        // console.log( resp.rows)
         const data = {
             success: true,
             resp: resp.rows

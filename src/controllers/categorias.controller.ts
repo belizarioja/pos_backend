@@ -6,12 +6,12 @@ import { pool } from '../database'
 export async function getCategorias (req: Request, res: Response): Promise<Response | void> {
     try {
         const { idempresa } = req.params;
-        console.log('idempresa')
-        console.log(idempresa)
+        // console.log('idempresa')
+        // console.log(idempresa)
         const select = "select * from t_categorias ";
         const where = " where idempresa = $1";
         const resp = await pool.query(select + where, [idempresa]);
-        console.log( resp.rows)
+        // console.log( resp.rows)
         const data = {
             success: true,
             resp: resp.rows
@@ -26,8 +26,8 @@ export async function getCategorias (req: Request, res: Response): Promise<Respo
 export async function setCategoria (req: Request, res: Response): Promise<Response | void> {
     try {
         const { categoria, descripcion, idempresa } = req.body;
-        console.log('idempresa')
-        console.log(idempresa)
+        // console.log('idempresa')
+        // console.log(idempresa)
         const insert = "insert into t_categorias (categoria, descripcion, idempresa) ";
         const values = " values ($1, $2, $3)";
         await pool.query(insert + values, [categoria, descripcion, idempresa]);

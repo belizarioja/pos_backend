@@ -426,8 +426,9 @@ export async function setVenta (req: Request, res: Response): Promise<Response |
         // AQUI INICIA
         // LA INTEGRACION
         // CON FACTURACION SMART
-        
-        if(itemventa.tokenfacturacion.length > 0 && itemventa.urlfacturacion.length > 0) {
+        console.log('itemventa.urlfacturacion')
+        console.log(itemventa.urlfacturacion)
+        if(itemventa.urlfacturacion && (itemventa.tokenfacturacion.length > 0 && itemventa.urlfacturacion.length > 0)) {
             const trackingid = await generateRandomString()
             const jsonbody = {
                 rif: itemventa.rif,

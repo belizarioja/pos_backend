@@ -433,7 +433,9 @@ function setVenta(req, res) {
             // AQUI INICIA
             // LA INTEGRACION
             // CON FACTURACION SMART
-            if (itemventa.tokenfacturacion.length > 0 && itemventa.urlfacturacion.length > 0) {
+            console.log('itemventa.urlfacturacion');
+            console.log(itemventa.urlfacturacion);
+            if (itemventa.urlfacturacion && (itemventa.tokenfacturacion.length > 0 && itemventa.urlfacturacion.length > 0)) {
                 const trackingid = yield generateRandomString();
                 const jsonbody = {
                     rif: itemventa.rif,

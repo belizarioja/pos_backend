@@ -17,7 +17,7 @@ function getUnidades(req, res) {
         try {
             const select = "select * from t_unidades ";
             const resp = yield database_1.pool.query(select);
-            console.log(resp.rows);
+            // console.log( resp.rows)
             const data = {
                 success: true,
                 resp: resp.rows
