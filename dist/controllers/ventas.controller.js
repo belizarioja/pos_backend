@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.anularVenta = exports.getVentaNumeroInterno = exports.getVenta = exports.getItemsVentas = exports.getVentas = exports.setVenta = exports.deleteHolds = exports.deleteItemHolds = exports.getItemsHolds = exports.getHolds = exports.updPrecioItemHolds = exports.updComentarioItemHolds = exports.updItemHolds = exports.setItemHolds = exports.setHolds = void 0;
+exports.updVenta = exports.anularVenta = exports.getVentaNumeroInterno = exports.getVenta = exports.getItemsVentas = exports.getVentas = exports.setVenta = exports.deleteHolds = exports.deleteItemHolds = exports.getItemsHolds = exports.getHolds = exports.updPrecioItemHolds = exports.updComentarioItemHolds = exports.updItemHolds = exports.setItemHolds = exports.setHolds = void 0;
 const moment_1 = __importDefault(require("moment"));
 const axios_1 = __importDefault(require("axios"));
 // DB
@@ -340,7 +340,7 @@ exports.deleteHolds = deleteHolds;
 function setVenta(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const { idhold, idempresa, tasausd, totalusd, relacionado } = req.body;
+            const { idhold, idempresa, tasausd, totalusd, relacionado, formadepago, abono, fechavence } = req.body;
             const baseigtf = 0;
             const igtf = 0;
             yield database_1.pool.query('BEGIN');
@@ -355,9 +355,9 @@ function setVenta(req, res) {
             let secuencial = yield getSecuencial(idempresa, itemventa.idtipofactura);
             secuencial = Number(secuencial) + 1;
             // console.log('secuencial', secuencial)
-            const insert = "insert into t_ventas (idcliente, idempresa, idusuario, fecha, idtipofactura, igtf, secuencial, tasausd, totalusd) ";
-            const values = " values ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id";
-            let respventa = yield database_1.pool.query(insert + values, [itemventa.idcliente, idempresa, itemventa.idusuario, fecha, itemventa.idtipofactura, igtf, secuencial, tasausd, totalusd]);
+            const insert = "insert into t_ventas (idcliente, idempresa, idusuario, fecha, idtipofactura, igtf, secuencial, tasausd, totalusd, formadepago, abono, fechavence) ";
+            const values = " values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id";
+            let respventa = yield database_1.pool.query(insert + values, [itemventa.idcliente, idempresa, itemventa.idusuario, fecha, itemventa.idtipofactura, igtf, secuencial, tasausd, totalusd, formadepago, abono, fechavence]);
             const idventa = respventa.rows[0].id;
             let subtotales = 0;
             let impuestos = 0;
@@ -564,12 +564,18 @@ function getSecuencial(idempresa, idtipofactura) {
 function getVentas(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const { idempresa } = req.params;
-            let sql = "select a.id, a.fecha, a.idcliente, a.numerointerno, a.numerocontrol, b.nombre as nombrecliente, b.documento, c.abrev, a.estatus, ";
+            const { idempresa, desde, hasta, formadepago } = req.body;
+            let sql = "select a.id, a.fecha, a.idcliente, a.numerointerno, a.numerocontrol, b.nombre as nombrecliente, b.documento, c.abrev, a.estatus, a.formadepago, a.abono, a.fechavence, ";
             sql += "a.subtotal, a.impuesto, a.total, a.totalusd, a.igtf, a.descuentos, a.idusuario, a.idtipofactura, d.tipofactura, e.nombre as usuario  ";
             const from = "from t_ventas a, t_clientes b, t_tipodocumentos c, t_tipofacturas d, t_usuarios e ";
             let where = " where a.idcliente = b.id and a.idusuario = e.id and b.idtipodocumento = c.id and a.idtipofactura = d.id and a.idempresa = $1";
-            const orderby = " order by a.fecha asc ";
+            if (formadepago) {
+                where += " and a.formadepago= " + formadepago;
+            }
+            if (desde.length > 0) {
+                where += " and to_char(a.fecha, 'YYYY-MM-DD') >= '" + desde + "' and to_char(a.fecha, 'YYYY-MM-DD') <= '" + hasta + "'";
+            }
+            const orderby = " order by a.fecha desc ";
             const resp = yield database_1.pool.query(sql + from + where + orderby, [idempresa]);
             // console.log( resp.rows)
             const data = {
@@ -702,3 +708,24 @@ function anularVenta(req, res) {
     });
 }
 exports.anularVenta = anularVenta;
+function updVenta(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { idventa, abono } = req.body;
+            // console.log('intipoproducto, cantidad')
+            // console.log(intipoproducto, cantidad)
+            const update = "update t_ventas set abono = abono + $1 ";
+            const where = " where id = $2 ";
+            yield database_1.pool.query(update + where, [abono, idventa]);
+            const data = {
+                success: true,
+                resp: 'Venta actualizada con éxito'
+            };
+            return res.status(200).json(data);
+        }
+        catch (e) {
+            return res.status(400).send('Error actualizando item holds ' + e);
+        }
+    });
+}
+exports.updVenta = updVenta;

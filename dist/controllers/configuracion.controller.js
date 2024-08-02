@@ -56,14 +56,23 @@ function updConfiguracion(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { id } = req.params;
-            const { tasabcv, tipomoneda, mostrartotal } = req.body;
-            if (tasabcv > 0) {
+            const { tasabcv, tipomoneda, mostrartotal, actualizar } = req.body;
+            if (tasabcv > 0 && actualizar === 1) {
+                console.log('Actualizando Inventario... ');
                 const sql = "update t_productos set costo = costousd * $2, precio = preciousd * $2 ";
                 const where = " where idcategoria in (select id from t_categorias where idempresa = $1 )";
                 yield database_1.pool.query(sql + where, [id, tasabcv]);
             }
-            let upd = "update t_empresas set tasabcv = $1, tipomoneda = $2, mostrartotal = $3 where id = $4 ";
-            yield database_1.pool.query(upd, [tasabcv, tipomoneda, mostrartotal, id]);
+            if (tasabcv > 0) {
+                console.log('Actualizando Tasa BCV... ');
+                const upd2 = "update t_empresas set tasabcv = $1 where id = $2 ";
+                yield database_1.pool.query(upd2, [tasabcv, id]);
+            }
+            if (tipomoneda && mostrartotal) {
+                console.log('Actualizando tipomoneda y mostrartotal... ');
+                let upd = "update t_empresas set tipomoneda = $1, mostrartotal = $2 where id = $3 ";
+                yield database_1.pool.query(upd, [tipomoneda, mostrartotal, id]);
+            }
             const data = {
                 success: true,
                 resp: 'Configuración actualizada con éxito'

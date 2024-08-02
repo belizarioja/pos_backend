@@ -12,10 +12,11 @@ router.route('/updprecioitemholds').post(ventas_controller_1.updPrecioItemHolds)
 router.route('/deleteitemholds').post(ventas_controller_1.deleteItemHolds);
 router.route('/deleteholds').post(ventas_controller_1.deleteHolds);
 router.route('/gethols/:idusuario').get(ventas_controller_1.getHolds);
-router.route('/getventas/:idempresa').get(ventas_controller_1.getVentas);
+router.route('/getventas').post(ventas_controller_1.getVentas);
 router.route('/getventa/:idventa').get(ventas_controller_1.getVenta);
 router.route('/getitemshols/:idholds').get(ventas_controller_1.getItemsHolds);
 router.route('/getitemsventas/:idventa').get(ventas_controller_1.getItemsVentas);
 router.route('/getventanumerointerno/:idempresa/:idtipofactura/:numerointerno').get(ventas_controller_1.getVentaNumeroInterno);
 router.route('/anularventa').post(ventas_controller_1.anularVenta);
+router.route('/updventa').post(ventas_controller_1.updVenta);
 exports.default = router;
