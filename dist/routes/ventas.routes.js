@@ -19,4 +19,5 @@ router.route('/getitemsventas/:idventa').get(ventas_controller_1.getItemsVentas)
 router.route('/getventanumerointerno/:idempresa/:idtipofactura/:numerointerno').get(ventas_controller_1.getVentaNumeroInterno);
 router.route('/anularventa').post(ventas_controller_1.anularVenta);
 router.route('/updventa').post(ventas_controller_1.updVenta);
+router.route('/setnotacredito').post(ventas_controller_1.setNotaCredito);
 exports.default = router;

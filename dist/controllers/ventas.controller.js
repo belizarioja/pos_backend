@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updVenta = exports.anularVenta = exports.getVentaNumeroInterno = exports.getVenta = exports.getItemsVentas = exports.getVentas = exports.setVenta = exports.deleteHolds = exports.deleteItemHolds = exports.getItemsHolds = exports.getHolds = exports.updPrecioItemHolds = exports.updComentarioItemHolds = exports.updItemHolds = exports.setItemHolds = exports.setHolds = void 0;
+exports.setNotaCredito = exports.updVenta = exports.anularVenta = exports.getVentaNumeroInterno = exports.getVenta = exports.getItemsVentas = exports.getVentas = exports.setVenta = exports.deleteHolds = exports.deleteItemHolds = exports.getItemsHolds = exports.getHolds = exports.updPrecioItemHolds = exports.updComentarioItemHolds = exports.updItemHolds = exports.setItemHolds = exports.setHolds = void 0;
 const moment_1 = __importDefault(require("moment"));
 const axios_1 = __importDefault(require("axios"));
 // DB
@@ -552,7 +552,7 @@ function generateRandomString() {
 }
 function getSecuencial(idempresa, idtipofactura) {
     return __awaiter(this, void 0, void 0, function* () {
-        // console.log(idempresa, idtipofactura)
+        console.log(idempresa, idtipofactura);
         const sql = " SELECT MAX(secuencial) FROM t_ventas ";
         const where = " where idempresa = $1 and idtipofactura = $2 ";
         // console.log(sql + where);
@@ -566,7 +566,7 @@ function getVentas(req, res) {
         try {
             const { idempresa, desde, hasta, formadepago } = req.body;
             let sql = "select a.id, a.fecha, a.idcliente, a.numerointerno, a.numerocontrol, b.nombre as nombrecliente, b.documento, c.abrev, a.estatus, a.formadepago, a.abono, a.fechavence, ";
-            sql += "a.subtotal, a.impuesto, a.total, a.totalusd, a.igtf, a.descuentos, a.idusuario, a.idtipofactura, d.tipofactura, e.nombre as usuario  ";
+            sql += "a.subtotal, a.impuesto, a.total, a.totalusd, a.igtf, a.descuentos, a.idusuario, a.idtipofactura, d.tipofactura, e.nombre as usuario, a.relacionado  ";
             const from = "from t_ventas a, t_clientes b, t_tipodocumentos c, t_tipofacturas d, t_usuarios e ";
             let where = " where a.idcliente = b.id and a.idusuario = e.id and b.idtipodocumento = c.id and a.idtipofactura = d.id and a.idempresa = $1";
             if (formadepago) {
@@ -592,7 +592,7 @@ function getVentas(req, res) {
 exports.getVentas = getVentas;
 function obtenerItemsVentas(id) {
     return __awaiter(this, void 0, void 0, function* () {
-        const select = "select a.id as iditemventa, a.idproducto, a.precio, a.cantidad, a.tasa, a.total, a.subtotal, a.idunidad, a.comentario, b.producto ";
+        const select = "select a.id as iditemventa, a.idproducto, a.precio, a.cantidad, a.tasa, a.impuesto, a.total, a.subtotal, a.descuento, a.idunidad, a.comentario, b.producto, b.sku  ";
         const from = "from t_ventas_items a, t_productos b ";
         let where = " where a.idproducto = b.id and a.idventa = $1";
         const resp = yield database_1.pool.query(select + from + where, [id]);
@@ -729,3 +729,180 @@ function updVenta(req, res) {
     });
 }
 exports.updVenta = updVenta;
+function setNotaCredito(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { idventa, idempresa } = req.body;
+            yield database_1.pool.query('BEGIN');
+            let sql = "select a.id, a.fecha, a.idcliente, a.numerointerno, a.numerocontrol, b.nombre as nombrecliente, b.documento, c.abrev, b.direccion as direccioncliente, b.telefono as telefonocliente, b.correo as correocliente,  ";
+            sql += " a.tasausd, a.subtotal, a.impuesto, a.total, a.totalusd, a.igtf, a.descuentos, a.idtipofactura, d.tipofactura, a.idusuario, e.nombre as usuario, f.rif, f.urlfacturacion, f.tokenfacturacion, a.formadepago, a.observacion  ";
+            const from = " from t_ventas a, t_clientes b, t_tipodocumentos c, t_tipofacturas d, t_usuarios e, t_empresas f ";
+            let where = " where a.idcliente = b.id and a.idusuario = e.id and b.idtipodocumento = c.id and a.idtipofactura = d.id and a.idempresa = f.id and a.id = $1";
+            const resp = yield database_1.pool.query(sql + from + where, [idventa]);
+            // console.log( resp.rows[0])
+            // const dataventa = resp.rows[0]
+            const idtipofactura = 3; // NOTA DE CREDITO
+            const itemventa = resp.rows[0];
+            console.log(itemventa);
+            const fecha = (0, moment_1.default)().format('YYYY-MM-DD HH:mm:ss');
+            let secuencial = yield getSecuencial(idempresa, idtipofactura);
+            secuencial = Number(secuencial) + 1;
+            console.log('secuencial', secuencial);
+            const insert = "insert into t_ventas (idcliente, idempresa, idusuario, fecha, idtipofactura, subtotal, impuesto, total, descuentos, igtf, secuencial, tasausd, totalusd, formadepago, observacion, relacionado) ";
+            const values = " values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING id";
+            let respventa = yield database_1.pool.query(insert + values, [itemventa.idcliente, idempresa, itemventa.idusuario, fecha, idtipofactura, itemventa.subtotal, itemventa.impuesto, itemventa.total, itemventa.descuentos, itemventa.igtf, secuencial, itemventa.tasausd, itemventa.totalusd, itemventa.formadepago, itemventa.observacion, itemventa.numerocontrol]);
+            const idventanew = respventa.rows[0].id;
+            console.log('idventanew', idventanew);
+            const respitemsventa = yield obtenerItemsVentas(idventa);
+            let subtotales = 0;
+            let impuestos = 0;
+            let totales = 0;
+            let descuentos = 0;
+            let exentos = 0;
+            let impr = 0;
+            let impg = 0;
+            let impa = 0;
+            let tasar = 0;
+            let tasag = 0;
+            let tasaa = 0;
+            let baser = 0;
+            let baseg = 0;
+            let basea = 0;
+            const cuerpofactura = [];
+            for (const i in respitemsventa.rows) {
+                const item = respitemsventa.rows[i];
+                console.log('item');
+                console.log(item);
+                const idproducto = item.idproducto;
+                const precio = item.precio;
+                const cantidad = item.cantidad;
+                const tasa = item.tasa;
+                const descuento = item.descuento;
+                const idunidad = item.idunidad;
+                const subtotal = item.subtotal;
+                const total = item.total;
+                const impuesto = item.impuesto;
+                const comentario = item.comentario || '';
+                if (Number(tasa) === 0) {
+                    exentos += subtotal;
+                }
+                if (Number(tasa) === 16) {
+                    tasag = Number(tasa);
+                    impg += (impuesto * item.cantidad);
+                    baseg += subtotal;
+                }
+                if (Number(tasa) === 8) {
+                    tasar = Number(tasa);
+                    impr += (impuesto * item.cantidad);
+                    baser += subtotal;
+                }
+                if (Number(tasa) === 31) {
+                    tasaa = Number(tasa);
+                    impa += (impuesto * item.cantidad);
+                    basea += subtotal;
+                }
+                const insert2 = "insert into t_ventas_items (idventa, idproducto, precio, cantidad, impuesto, tasa, subtotal, descuento, total, idunidad, comentario ) ";
+                const values2 = " values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) ";
+                yield database_1.pool.query(insert2 + values2, [idventanew, idproducto, precio, cantidad, impuesto, tasa, subtotal, descuento, total, idunidad, comentario]);
+                const obj = {
+                    codigo: item.sku || '000' + (Number(i) + 1),
+                    descripcion: item.producto,
+                    comentario: item.comentario || '',
+                    precio: Number(item.precio),
+                    cantidad: Number(item.cantidad),
+                    tasa: Number(tasa),
+                    descuento: Number(item.descuento),
+                    exento: Number(tasa) === 0 || false,
+                    monto: Number(subtotal)
+                };
+                cuerpofactura.push(obj);
+            }
+            // totales = Number(totales) + igtf
+            const numerointerno = secuencial.toString().padStart(8, '0');
+            let numerocontrol = '00-' + numerointerno;
+            // AQUI INICIA
+            // LA INTEGRACION
+            // CON FACTURACION SMART
+            console.log('itemventa.urlfacturacion');
+            console.log(itemventa.urlfacturacion);
+            if (itemventa.urlfacturacion && (itemventa.tokenfacturacion.length > 0 && itemventa.urlfacturacion.length > 0)) {
+                const trackingid = yield generateRandomString();
+                const jsonbody = {
+                    rif: itemventa.rif,
+                    trackingid: trackingid,
+                    nombrecliente: itemventa.nombrecliente,
+                    rifcedulacliente: itemventa.documento,
+                    direccioncliente: itemventa.direccioncliente,
+                    telefonocliente: itemventa.telefonocliente,
+                    emailcliente: itemventa.correocliente,
+                    sucursal: itemventa.sucursal || '',
+                    numerointerno: numerointerno,
+                    relacionado: itemventa.numerocontrol || '',
+                    idtipodocumento: idtipofactura,
+                    subtotal: itemventa.subtotal,
+                    exento: exentos,
+                    tasag: tasag,
+                    baseg: baseg,
+                    impuestog: impg,
+                    tasar: tasar,
+                    baser: baser,
+                    impuestor: impr,
+                    tasaa: tasaa,
+                    basea: basea,
+                    impuestoa: impa,
+                    tasaigtf: 3,
+                    baseigtf: itemventa.igtf / 3 / 100,
+                    impuestoigtf: itemventa.igtf,
+                    total: itemventa.total,
+                    tasacambio: itemventa.tasausd > 0 ? Number(itemventa.tasausd) : undefined,
+                    idtipocedulacliente: itemventa.idtipodocumento || 1,
+                    tipomoneda: itemventa.tipomoneda || 1,
+                    sendmail: 1,
+                    cuerpofactura: cuerpofactura,
+                    formasdepago: [{
+                            forma: 'Nota de Crédito',
+                            valor: Number(totales)
+                        }],
+                    // observacion: obs.length > 0 ? obs : undefined
+                };
+                const respintegracion = yield setIntegracion(jsonbody, itemventa.tokenfacturacion, itemventa.urlfacturacion);
+                // console.log('respintegracion')
+                // console.log(respintegracion)
+                if (respintegracion) {
+                    numerocontrol = respintegracion.numerodocumento;
+                }
+                else {
+                    yield database_1.pool.query('ROLLBACK');
+                    const data = {
+                        success: false,
+                        resp: {
+                            message: ERRORINT
+                        }
+                    };
+                    return res.status(202).json(data);
+                }
+            }
+            // AQUI TERMINA 
+            // LA INTEGRACION
+            // CON FACTURACION SMART
+            const sqlupd = 'update t_ventas set numerointerno = $1, numerocontrol = $2 ';
+            const whereupd = " where id = $3";
+            yield database_1.pool.query(sqlupd + whereupd, [numerointerno, numerocontrol, idventanew]);
+            yield database_1.pool.query('COMMIT');
+            const data = {
+                success: true,
+                resp: {
+                    idventanew,
+                    numerointerno,
+                    numerocontrol,
+                    fecha
+                }
+            };
+            return res.status(200).json(data);
+        }
+        catch (e) {
+            return res.status(400).send('Error creando venta ' + e);
+        }
+    });
+}
+exports.setNotaCredito = setNotaCredito;
