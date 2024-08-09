@@ -350,7 +350,9 @@ function setVenta(req, res) {
             let where = " where a.id = b.idhold and a.idusuario = c.id and c.idempresa = d.id and a.idcliente = e.id and b.idproducto = f.id and a.id = $1";
             const resp = yield database_1.pool.query(select + from + where, [idhold]);
             const itemventa = resp.rows[0];
-            // console.log(itemventa)
+            console.log(itemventa);
+            console.log('itemventa.idtipofactura');
+            console.log(itemventa.idtipofactura);
             const fecha = (0, moment_1.default)().format('YYYY-MM-DD HH:mm:ss');
             let secuencial = yield getSecuencial(idempresa, itemventa.idtipofactura);
             secuencial = Number(secuencial) + 1;
@@ -418,6 +420,7 @@ function setVenta(req, res) {
                     codigo: item.sku || '000' + (Number(i) + 1),
                     descripcion: item.producto,
                     comentario: item.comentario || '',
+                    intipounidad: item.idunidad || 1,
                     precio: Number(item.precio),
                     cantidad: Number(item.cantidad),
                     tasa: Number(tasa),
