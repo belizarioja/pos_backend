@@ -339,9 +339,9 @@ export async function setVenta (req: Request, res: Response): Promise<Response |
         let where = " where a.id = b.idhold and a.idusuario = c.id and c.idempresa = d.id and a.idcliente = e.id and b.idproducto = f.id and a.id = $1";
         const resp = await pool.query(select + from + where, [idhold]);
         const itemventa = resp.rows[0]
-        console.log(itemventa)
-        console.log('itemventa.idtipofactura')
-        console.log(itemventa.idtipofactura)
+        // console.log(itemventa)
+        // console.log('itemventa.idtipofactura')
+        // console.log(itemventa.idtipofactura)
         const fecha = moment().format('YYYY-MM-DD HH:mm:ss')
         let secuencial = await getSecuencial(idempresa, itemventa.idtipofactura)
         secuencial = Number(secuencial) + 1
@@ -412,7 +412,6 @@ export async function setVenta (req: Request, res: Response): Promise<Response |
                 codigo: item.sku || '000' + (Number(i) + 1),
                 descripcion: item.producto,
                 comentario: item.comentario || '',
-                intipounidad: item.idunidad || 1,
                 precio: Number(item.precio), // base
                 cantidad: Number(item.cantidad),
                 tasa: Number(tasa),
@@ -429,8 +428,8 @@ export async function setVenta (req: Request, res: Response): Promise<Response |
         // AQUI INICIA
         // LA INTEGRACION
         // CON FACTURACION SMART
-        console.log('itemventa.urlfacturacion')
-        console.log(itemventa.urlfacturacion)
+        // console.log('itemventa.urlfacturacion')
+        // console.log(itemventa.urlfacturacion)
         if(itemventa.urlfacturacion && (itemventa.tokenfacturacion.length > 0 && itemventa.urlfacturacion.length > 0)) {
             const trackingid = await generateRandomString()
             const jsonbody = {
@@ -444,6 +443,7 @@ export async function setVenta (req: Request, res: Response): Promise<Response |
                 sucursal: itemventa.sucursal || '',
                 numerointerno: numerointerno,
                 relacionado: relacionado || '',
+                fechavence: fechavence || '',
                 idtipodocumento: itemventa.idtipofactura,
                 subtotal: subtotales,
                 exento: exentos,
