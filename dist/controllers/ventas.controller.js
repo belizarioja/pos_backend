@@ -350,9 +350,9 @@ function setVenta(req, res) {
             let where = " where a.id = b.idhold and a.idusuario = c.id and c.idempresa = d.id and a.idcliente = e.id and b.idproducto = f.id and a.id = $1";
             const resp = yield database_1.pool.query(select + from + where, [idhold]);
             const itemventa = resp.rows[0];
-            console.log(itemventa);
-            console.log('itemventa.idtipofactura');
-            console.log(itemventa.idtipofactura);
+            // console.log(itemventa)
+            // console.log('itemventa.idtipofactura')
+            // console.log(itemventa.idtipofactura)
             const fecha = (0, moment_1.default)().format('YYYY-MM-DD HH:mm:ss');
             let secuencial = yield getSecuencial(idempresa, itemventa.idtipofactura);
             secuencial = Number(secuencial) + 1;
@@ -435,8 +435,8 @@ function setVenta(req, res) {
             // AQUI INICIA
             // LA INTEGRACION
             // CON FACTURACION SMART
-            console.log('itemventa.urlfacturacion');
-            console.log(itemventa.urlfacturacion);
+            // console.log('itemventa.urlfacturacion')
+            // console.log(itemventa.urlfacturacion)
             if (itemventa.urlfacturacion && (itemventa.tokenfacturacion.length > 0 && itemventa.urlfacturacion.length > 0)) {
                 const trackingid = yield generateRandomString();
                 const jsonbody = {
@@ -471,11 +471,8 @@ function setVenta(req, res) {
                     idtipocedulacliente: itemventa.idtipodocumento || 1,
                     tipomoneda: itemventa.tipomoneda || 1,
                     sendmail: 1,
-                    cuerpofactura: cuerpofactura,
-                    formasdepago: [{
-                            forma: 'Caja',
-                            valor: Number(totales)
-                        }],
+                    cuerpofactura: cuerpofactura
+                    // formasdepago: [],
                     // observacion: obs.length > 0 ? obs : undefined
                 };
                 const respintegracion = yield setIntegracion(jsonbody, itemventa.tokenfacturacion, itemventa.urlfacturacion);

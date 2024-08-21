@@ -464,11 +464,8 @@ export async function setVenta (req: Request, res: Response): Promise<Response |
                 idtipocedulacliente: itemventa.idtipodocumento || 1,
                 tipomoneda: itemventa.tipomoneda || 1,
                 sendmail: 1,
-                cuerpofactura: cuerpofactura,
-                formasdepago: [{
-                    forma: 'Caja',
-                    valor: Number(totales)
-                }],
+                cuerpofactura: cuerpofactura
+                // formasdepago: [],
                 // observacion: obs.length > 0 ? obs : undefined
             }
             const respintegracion = await setIntegracion(jsonbody, itemventa.tokenfacturacion, itemventa.urlfacturacion)
