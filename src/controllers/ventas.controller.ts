@@ -327,7 +327,7 @@ export async function deleteHolds (req: Request, res: Response): Promise<Respons
 
 export async function setVenta (req: Request, res: Response): Promise<Response | void> {
     try {
-        const { idhold, idempresa, tasausd, totalusd, relacionado, formadepago, abono, fechavence } = req.body;
+        const { idhold, idempresa, tasausd, totalusd, relacionado, formadepago, abono, fechavence, observacion } = req.body;
         const baseigtf = 0
         const igtf = 0
 
@@ -346,9 +346,9 @@ export async function setVenta (req: Request, res: Response): Promise<Response |
         let secuencial = await getSecuencial(idempresa, itemventa.idtipofactura)
         secuencial = Number(secuencial) + 1
         // console.log('secuencial', secuencial)
-        const insert = "insert into t_ventas (idcliente, idempresa, idusuario, fecha, idtipofactura, igtf, secuencial, tasausd, totalusd, formadepago, abono, fechavence) ";
-        const values = " values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id";
-        let respventa = await pool.query(insert + values, [itemventa.idcliente, idempresa, itemventa.idusuario, fecha, itemventa.idtipofactura, igtf, secuencial, tasausd, totalusd, formadepago, abono, fechavence]);
+        const insert = "insert into t_ventas (idcliente, idempresa, idusuario, fecha, idtipofactura, igtf, secuencial, tasausd, totalusd, formadepago, abono, fechavence, observacion) ";
+        const values = " values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id";
+        let respventa = await pool.query(insert + values, [itemventa.idcliente, idempresa, itemventa.idusuario, fecha, itemventa.idtipofactura, igtf, secuencial, tasausd, totalusd, formadepago, abono, fechavence, observacion]);
         const idventa = respventa.rows[0].id
         let subtotales = 0
         let impuestos = 0
@@ -464,9 +464,9 @@ export async function setVenta (req: Request, res: Response): Promise<Response |
                 idtipocedulacliente: itemventa.idtipodocumento || 1,
                 tipomoneda: itemventa.tipomoneda || 1,
                 sendmail: 1,
-                cuerpofactura: cuerpofactura
+                cuerpofactura: cuerpofactura,
+                observacion: observacion.length > 0 ? observacion : undefined
                 // formasdepago: [],
-                // observacion: obs.length > 0 ? obs : undefined
             }
             const respintegracion = await setIntegracion(jsonbody, itemventa.tokenfacturacion, itemventa.urlfacturacion)
             // console.log('respintegracion')
