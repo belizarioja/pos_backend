@@ -371,12 +371,12 @@ export async function setVenta (req: Request, res: Response): Promise<Response |
             // console.log('item')
             // console.log(item)
 
-            const impuesto = item.precio * item.tasa / 100
+            const impuesto = item.precio * (item.tasa / 100) * item.cantidad
             impuestos  = Number(impuestos) + impuesto
             const subtotal = item.precio * item.cantidad
             subtotales = Number(subtotales) + subtotal
             descuentos = Number(descuentos) + item.descuento
-            totales = Number(totales) + subtotal + (impuesto * item.cantidad)
+            totales = Number(totales) + subtotal + impuesto
            
             const idproducto = item.idproducto
             const precio = item.precio
@@ -387,21 +387,21 @@ export async function setVenta (req: Request, res: Response): Promise<Response |
             }
             if (Number(tasa) === 16) {
                 tasag = Number(tasa)
-                impg += (impuesto * item.cantidad)
+                impg += Number(impuesto)
                 baseg += subtotal
             }
             if (Number(tasa) === 8) {
                 tasar = Number(tasa)
-                impr += (impuesto * item.cantidad)
+                impr += impuesto
                 baser += subtotal
             }
             if (Number(tasa) === 31) {
                 tasaa = Number(tasa)
-                impa += (impuesto * item.cantidad)
+                impa += impuesto
                 basea += subtotal
             }
             const descuento = item.descuento
-            const total = subtotal + (impuesto * item.cantidad)
+            const total = subtotal + impuesto
             const idunidad = item.idunidad
             const comentario = item.comentario || ''
 
@@ -527,6 +527,27 @@ async function setIntegracion (jsonbody: any, token: any, url: any) {
     if(resp.data.success) {
         // console.log(resp.data.data)
         return resp.data.data
+    } else {
+        console.log(resp.data.error.message)
+        ERRORINT = resp.data.error.message
+        return false
+    }
+    
+}
+async function setIntegracionAnular (jsonbody: any, token: any, url: any) {
+    // console.log(jsonbody)
+    // console.log(token)
+    // console.log(url)
+    const headersjwt = {
+        headers: {
+          Authorization: 'Bearer ' + token
+        }
+      }
+    const resp = await axios.post(url, jsonbody, headersjwt)
+    // console.log(resp.data)
+    if(resp.data.success) {
+        // console.log(resp.data.success)
+        return resp.data.success
     } else {
         console.log(resp.data.error.message)
         ERRORINT = resp.data.error.message
@@ -672,21 +693,50 @@ export async function getVentaNumeroInterno (req: Request, res: Response): Promi
 }
 export async function anularVenta (req: Request, res: Response): Promise<Response | void> {
     try {
-        const { idventa } = req.body;
-        const sqlupd = 'update t_ventas set estatus = 2 where id = $1'
-        await pool.query(sqlupd, [idventa]);
+        const { idventa, numerocontrol, rifempresa, urlfacturacion, tokenfacturacion } = req.body;
+        await pool.query('BEGIN')
         
-        // LIBERAR INVENTARIO
-        const select = "select id, idproducto, cantidad from t_ventas_items where idventa = $1";
-        const resp = await pool.query(select, [idventa]);
-        // console.log( resp.rows)
-        for (let i = 0; i < resp.rows.length; i++) {
-            const idproducto = resp.rows[i].idproducto
-            const cantidad = resp.rows[i].cantidad            
-            const sqlupd2 = 'update t_productos set inventario1 = inventario1 + $1 where id = $2'
-            await pool.query(sqlupd2, [cantidad, idproducto]);
-        }
+            // AQUI INICIA
+            // LA INTEGRACION PARA ANULAR
+            // CON FACTURACION SMART
+            if(urlfacturacion && (tokenfacturacion.length > 0 && urlfacturacion.length > 0)) {
+                const jsonbody = {
+                    numerodocumento: numerocontrol,
+                    observacion: 'Se anula documento',
+                    rif: rifempresa
+                    // formasdepago: [],
+                }
+                const newurl = urlfacturacion.replace('/facturacion','/anulacion')
+                const respintegracion = await setIntegracionAnular(jsonbody, tokenfacturacion, newurl)
+                // console.log('respintegracion')
+                // console.log(respintegracion)
+                if (!respintegracion) {
+                    
+                    await pool.query('ROLLBACK')
 
+                    const data = {
+                        success: false,
+                        resp: {
+                            message: ERRORINT
+                        }
+                    };
+                    return res.status(202).json(data);
+                }
+            }
+            const sqlupd = 'update t_ventas set estatus = 2 where id = $1'
+            await pool.query(sqlupd, [idventa]);
+            
+            // LIBERAR INVENTARIO
+            const select = "select id, idproducto, cantidad from t_ventas_items where idventa = $1";
+            const resp = await pool.query(select, [idventa]);
+            // console.log( resp.rows)
+            for (let i = 0; i < resp.rows.length; i++) {
+                const idproducto = resp.rows[i].idproducto
+                const cantidad = resp.rows[i].cantidad            
+                const sqlupd2 = 'update t_productos set inventario1 = inventario1 + $1 where id = $2'
+                await pool.query(sqlupd2, [cantidad, idproducto]);
+            }
+        await pool.query('COMMIT')
         const data = {
             success: true,
             resp: 'Venta anulada con éxito'

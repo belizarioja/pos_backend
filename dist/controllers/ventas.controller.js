@@ -381,12 +381,12 @@ function setVenta(req, res) {
                 const item = resp.rows[i];
                 // console.log('item')
                 // console.log(item)
-                const impuesto = item.precio * item.tasa / 100;
+                const impuesto = item.precio * (item.tasa / 100) * item.cantidad;
                 impuestos = Number(impuestos) + impuesto;
                 const subtotal = item.precio * item.cantidad;
                 subtotales = Number(subtotales) + subtotal;
                 descuentos = Number(descuentos) + item.descuento;
-                totales = Number(totales) + subtotal + (impuesto * item.cantidad);
+                totales = Number(totales) + subtotal + impuesto;
                 const idproducto = item.idproducto;
                 const precio = item.precio;
                 const cantidad = item.cantidad;
@@ -396,21 +396,21 @@ function setVenta(req, res) {
                 }
                 if (Number(tasa) === 16) {
                     tasag = Number(tasa);
-                    impg += (impuesto * item.cantidad);
+                    impg += Number(impuesto);
                     baseg += subtotal;
                 }
                 if (Number(tasa) === 8) {
                     tasar = Number(tasa);
-                    impr += (impuesto * item.cantidad);
+                    impr += impuesto;
                     baser += subtotal;
                 }
                 if (Number(tasa) === 31) {
                     tasaa = Number(tasa);
-                    impa += (impuesto * item.cantidad);
+                    impa += impuesto;
                     basea += subtotal;
                 }
                 const descuento = item.descuento;
-                const total = subtotal + (impuesto * item.cantidad);
+                const total = subtotal + impuesto;
                 const idunidad = item.idunidad;
                 const comentario = item.comentario || '';
                 const insert2 = "insert into t_ventas_items (idventa, idproducto, precio, cantidad, impuesto, tasa, subtotal, descuento, total, idunidad, comentario ) ";
@@ -531,6 +531,29 @@ function setIntegracion(jsonbody, token, url) {
         if (resp.data.success) {
             // console.log(resp.data.data)
             return resp.data.data;
+        }
+        else {
+            console.log(resp.data.error.message);
+            ERRORINT = resp.data.error.message;
+            return false;
+        }
+    });
+}
+function setIntegracionAnular(jsonbody, token, url) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // console.log(jsonbody)
+        // console.log(token)
+        // console.log(url)
+        const headersjwt = {
+            headers: {
+                Authorization: 'Bearer ' + token
+            }
+        };
+        const resp = yield axios_1.default.post(url, jsonbody, headersjwt);
+        // console.log(resp.data)
+        if (resp.data.success) {
+            // console.log(resp.data.success)
+            return resp.data.success;
         }
         else {
             console.log(resp.data.error.message);
@@ -683,7 +706,33 @@ exports.getVentaNumeroInterno = getVentaNumeroInterno;
 function anularVenta(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const { idventa } = req.body;
+            const { idventa, numerocontrol, rifempresa, urlfacturacion, tokenfacturacion } = req.body;
+            yield database_1.pool.query('BEGIN');
+            // AQUI INICIA
+            // LA INTEGRACION PARA ANULAR
+            // CON FACTURACION SMART
+            if (urlfacturacion && (tokenfacturacion.length > 0 && urlfacturacion.length > 0)) {
+                const jsonbody = {
+                    numerodocumento: numerocontrol,
+                    observacion: 'Se anula documento',
+                    rif: rifempresa
+                    // formasdepago: [],
+                };
+                const newurl = urlfacturacion.replace('/facturacion', '/anulacion');
+                const respintegracion = yield setIntegracionAnular(jsonbody, tokenfacturacion, newurl);
+                // console.log('respintegracion')
+                // console.log(respintegracion)
+                if (!respintegracion) {
+                    yield database_1.pool.query('ROLLBACK');
+                    const data = {
+                        success: false,
+                        resp: {
+                            message: ERRORINT
+                        }
+                    };
+                    return res.status(202).json(data);
+                }
+            }
             const sqlupd = 'update t_ventas set estatus = 2 where id = $1';
             yield database_1.pool.query(sqlupd, [idventa]);
             // LIBERAR INVENTARIO
@@ -696,6 +745,7 @@ function anularVenta(req, res) {
                 const sqlupd2 = 'update t_productos set inventario1 = inventario1 + $1 where id = $2';
                 yield database_1.pool.query(sqlupd2, [cantidad, idproducto]);
             }
+            yield database_1.pool.query('COMMIT');
             const data = {
                 success: true,
                 resp: 'Venta anulada con éxito'
