@@ -830,19 +830,20 @@ export async function setNotaCredito (req: Request, res: Response): Promise<Resp
             }
             if (Number(tasa) === 16) {
                 tasag = Number(tasa)
-                impg += (impuesto * item.cantidad)
+                impg += impuesto
                 baseg += subtotal
             }
             if (Number(tasa) === 8) {
                 tasar = Number(tasa)
-                impr += (impuesto * item.cantidad)
+                impr += impuesto
                 baser += subtotal
             }
             if (Number(tasa) === 31) {
                 tasaa = Number(tasa)
-                impa += (impuesto * item.cantidad)
+                impa += impuesto
                 basea += subtotal
             }
+            // console.log('impg: ', impg)
 
             const insert2 = "insert into t_ventas_items (idventa, idproducto, precio, cantidad, impuesto, tasa, subtotal, descuento, total, idunidad, comentario ) ";
             const values2 = " values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) ";
