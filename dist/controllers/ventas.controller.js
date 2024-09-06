@@ -784,7 +784,7 @@ function setNotaCredito(req, res) {
         try {
             const { idventa, idempresa } = req.body;
             yield database_1.pool.query('BEGIN');
-            let sql = "select a.id, a.fecha, a.idcliente, a.numerointerno, a.numerocontrol, b.nombre as nombrecliente, b.documento, c.abrev, b.direccion as direccioncliente, b.telefono as telefonocliente, b.correo as correocliente,  ";
+            let sql = "select a.id, a.fecha, a.idcliente, a.numerointerno, a.numerocontrol, b.nombre as nombrecliente, b.documento, c.abrev, b.direccion as direccioncliente, b.telefono as telefonocliente, b.correo as correocliente, f.tipomoneda, ";
             sql += " a.tasausd, a.subtotal, a.impuesto, a.total, a.totalusd, a.igtf, a.descuentos, a.idtipofactura, d.tipofactura, a.idusuario, e.nombre as usuario, f.rif, f.urlfacturacion, f.tokenfacturacion, a.formadepago, a.observacion  ";
             const from = " from t_ventas a, t_clientes b, t_tipodocumentos c, t_tipofacturas d, t_usuarios e, t_empresas f ";
             let where = " where a.idcliente = b.id and a.idusuario = e.id and b.idtipodocumento = c.id and a.idtipofactura = d.id and a.idempresa = f.id and a.id = $1";
@@ -874,8 +874,8 @@ function setNotaCredito(req, res) {
             // AQUI INICIA
             // LA INTEGRACION
             // CON FACTURACION SMART
-            console.log('itemventa.urlfacturacion');
-            console.log(itemventa.urlfacturacion);
+            // console.log('itemventa.urlfacturacion')
+            // console.log(itemventa.urlfacturacion)
             if (itemventa.urlfacturacion && (itemventa.tokenfacturacion.length > 0 && itemventa.urlfacturacion.length > 0)) {
                 const trackingid = yield generateRandomString();
                 const jsonbody = {
