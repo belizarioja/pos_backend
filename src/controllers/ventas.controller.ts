@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import moment from 'moment';
-import axios from 'axios'
+import axios from 'axios';
+
 
 // DB
 import { pool } from '../database'
